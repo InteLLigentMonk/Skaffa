@@ -1,18 +1,63 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useColorScheme } from 'react-native';
+import { Colors } from "@/constants/theme";
+import { AuthProvider, useAuth } from "@/contexts/auth-context";
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
+import { useColorScheme } from "react-native";
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+const lightTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    primary: Colors.primary,
+    background: Colors.light.background,
+    card: Colors.light.surface,
+    text: Colors.light.text,
+    border: Colors.light.border,
+  },
+};
 
-SplashScreen.preventAutoHideAsync();
+const darkTheme = {
+  ...DarkTheme,
+  colors: {
+    ...DarkTheme.colors,
+    primary: Colors.primary,
+    background: Colors.dark.background,
+    card: Colors.dark.surface,
+    text: Colors.dark.text,
+    border: Colors.dark.border,
+  },
+};
 
-export default function TabLayout() {
+// Separate component so it can read the context that RootLayout provides.
+const RootNavigator = () => {
+  const { isAuthenticated, initializing } = useAuth();
+
+  // Avoid flashing the login screen while the stored session is restored.
+  if (initializing) {
+    return null;
+  }
+
+  return (
+    <Stack>
+      <Stack.Protected guard={isAuthenticated}>
+        <Stack.Screen name="(authorized)" options={{ headerShown: false }} />
+      </Stack.Protected>
+      <Stack.Protected guard={!isAuthenticated}>
+        <Stack.Screen
+          name="(guest)"
+          options={{ title: "Registrera dig", headerShown: false }}
+        />
+      </Stack.Protected>
+    </Stack>
+  );
+};
+
+export default function RootLayout() {
   const colorScheme = useColorScheme();
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
+    <AuthProvider>
+      <ThemeProvider value={colorScheme === "dark" ? darkTheme : lightTheme}>
+        <RootNavigator />
+      </ThemeProvider>
+    </AuthProvider>
   );
 }
