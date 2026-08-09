@@ -1,5 +1,5 @@
 import { useTheme } from "@/hooks/use-theme";
-import { Ionicons } from "@react-native-vector-icons/ionicons";
+import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 
 const TabsLayout = () => {
