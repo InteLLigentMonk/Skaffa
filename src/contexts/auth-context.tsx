@@ -15,6 +15,12 @@ type AuthUser = {
   avatarUrl?: string;
 };
 
+export type RegisterResult = {
+  // With email confirmation enabled, Supabase does not report an existing
+  // address as an error. It returns an obfuscated user with no identities.
+  emailTaken: boolean;
+};
+
 type AuthState = {
   isAuthenticated: boolean;
   // True until the stored session has been read back on app start.
@@ -27,7 +33,7 @@ type AuthState = {
     email: string,
     password: string,
     displayName: string,
-  ) => Promise<void>;
+  ) => Promise<RegisterResult>;
   validateEmail: (email: string, token: string) => Promise<void>;
 };
 
@@ -106,11 +112,15 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
       });
       if (error) throw error;
 
-      if (data.user) {
+      const emailTaken = data.user?.identities?.length === 0;
+
+      if (data.user && !emailTaken) {
         setUser(mapUser(data.user));
       }
       // No session means email confirmation is pending
       setIsAuthenticated(!!data.session);
+
+      return { emailTaken };
     } finally {
       setLoading(false);
     }

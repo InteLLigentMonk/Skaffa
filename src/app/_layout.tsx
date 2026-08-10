@@ -1,7 +1,10 @@
 import { Colors } from "@/constants/theme";
 import { AuthProvider, useAuth } from "@/contexts/auth-context";
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
+import { HeroUINativeProvider } from "heroui-native";
 import { useColorScheme } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import "../global.css";
 
 const lightTheme = {
   ...DefaultTheme,
@@ -54,10 +57,16 @@ const RootNavigator = () => {
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   return (
-    <AuthProvider>
-      <ThemeProvider value={colorScheme === "dark" ? darkTheme : lightTheme}>
-        <RootNavigator />
-      </ThemeProvider>
-    </AuthProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <HeroUINativeProvider>
+        <AuthProvider>
+          <ThemeProvider
+            value={colorScheme === "dark" ? darkTheme : lightTheme}
+          >
+            <RootNavigator />
+          </ThemeProvider>
+        </AuthProvider>
+      </HeroUINativeProvider>
+    </GestureHandlerRootView>
   );
 }

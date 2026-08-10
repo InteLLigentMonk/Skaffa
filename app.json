@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "FoodFlow",
-    "slug": "FoodFlow",
+    "name": "Skaffa",
+    "slug": "Skaffa",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "foodflow",
+    "scheme": "skaffa",
     "userInterfaceStyle": "dark",
     "ios": {
       "icon": "./assets/expo.icon"
