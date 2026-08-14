@@ -1,11 +1,13 @@
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
+import { Typography } from "heroui-native";
+import { View } from "react-native";
 
 const NewRecepie = () => {
   return (
-    <ThemedView>
-      <ThemedText>Nytt Recept</ThemedText>
-    </ThemedView>
+    <View className="flex-1 gap-4 p-8">
+      <Typography.Heading type="h2" weight="semibold">
+        Nytt recept
+      </Typography.Heading>
+    </View>
   );
 };
 

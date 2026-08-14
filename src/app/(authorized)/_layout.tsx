@@ -6,7 +6,19 @@ const TabsLayout = () => {
   const theme = useTheme();
 
   return (
-    <Tabs>
+    <Tabs
+      screenOptions={{
+        // Bakgrund och kantlinje kommer från navigationstemat, men tint-
+        // färgerna måste sättas explicit — React Navigation faller annars
+        // tillbaka på sin egen inbyggda grå för inaktiva flikar.
+        tabBarActiveTintColor: theme.primary,
+        tabBarInactiveTintColor: theme.textSecondary,
+        tabBarStyle: {
+          backgroundColor: theme.surface,
+          borderTopColor: theme.border,
+        },
+      }}
+    >
       <Tabs.Screen
         name="(home)"
         options={{

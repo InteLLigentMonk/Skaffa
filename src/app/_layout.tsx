@@ -1,38 +1,13 @@
-import { Colors } from "@/constants/theme";
 import { AuthProvider, useAuth } from "@/contexts/auth-context";
-import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
+import { useNavigationTheme } from "@/hooks/use-navigation-theme";
+import { Stack, ThemeProvider } from "expo-router";
 import { HeroUINativeProvider } from "heroui-native";
-import { useColorScheme } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "../global.css";
 
-const lightTheme = {
-  ...DefaultTheme,
-  colors: {
-    ...DefaultTheme.colors,
-    primary: Colors.primary,
-    background: Colors.light.background,
-    card: Colors.light.surface,
-    text: Colors.light.text,
-    border: Colors.light.border,
-  },
-};
-
-const darkTheme = {
-  ...DarkTheme,
-  colors: {
-    ...DarkTheme.colors,
-    primary: Colors.primary,
-    background: Colors.dark.background,
-    card: Colors.dark.surface,
-    text: Colors.dark.text,
-    border: Colors.dark.border,
-  },
-};
-
 // Separate component so it can read the context that RootLayout provides.
 const RootNavigator = () => {
-  const { isAuthenticated, initializing } = useAuth();
+  const { isAuthenticated, initializing, isRecoverySession } = useAuth();
 
   // Avoid flashing the login screen while the stored session is restored.
   if (initializing) {
@@ -41,8 +16,16 @@ const RootNavigator = () => {
 
   return (
     <Stack>
-      <Stack.Protected guard={isAuthenticated}>
+      <Stack.Protected guard={isAuthenticated && !isRecoverySession}>
         <Stack.Screen name="(authorized)" options={{ headerShown: false }} />
+      </Stack.Protected>
+      {/* A recovery link takes over the entire app until a new password is
+          set, so the user cannot tab away while the old one is still valid. */}
+      <Stack.Protected guard={isAuthenticated && isRecoverySession}>
+        <Stack.Screen
+          name="reset-password"
+          options={{ title: "Välj nytt lösenord" }}
+        />
       </Stack.Protected>
       <Stack.Protected guard={!isAuthenticated}>
         <Stack.Screen
@@ -55,14 +38,13 @@ const RootNavigator = () => {
 };
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  const navigationTheme = useNavigationTheme();
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <HeroUINativeProvider>
         <AuthProvider>
-          <ThemeProvider
-            value={colorScheme === "dark" ? darkTheme : lightTheme}
-          >
+          <ThemeProvider value={navigationTheme}>
             <RootNavigator />
           </ThemeProvider>
         </AuthProvider>
