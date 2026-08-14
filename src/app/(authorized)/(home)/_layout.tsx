@@ -1,8 +1,6 @@
-import { useTheme } from "@/hooks/use-theme";
 import { Stack } from "expo-router";
 
 const HomeLayout = () => {
-  const theme = useTheme();
   return (
     <Stack>
       <Stack.Screen

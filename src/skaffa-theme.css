@@ -1,0 +1,253 @@
+/* ============================================================================
+   Skaffa – Temafil för HeroUI Native (Tailwind CSS v4 + Uniwind)
+   Palett: "Fresh Market" — grön primär (accent) + orange sekundär, varm stone-neutral.
+   Alla färger i OKLCH. Ljust/mörkt via @variant. Alla par uppfyller WCAG 2.1 AA.
+
+   Användning:
+     @import "heroui-native/styles";          // basstilar först
+     @import "./skaffa-theme.css";             // detta tema efter
+
+   HeroUI Native härleder hover/pressed/soft automatiskt via color-mix() från
+   varje bas-token. Du sätter alltså normalt bara bas + -foreground; -soft och
+   -soft-foreground nedan är valfria men inkluderade för exakt kontroll.
+
+   Semantik:
+     --accent      = Skaffas PRIMÄRA varumärkesfärg (grön)
+     --secondary   = Skaffas ACCENT/CTA (orange)  ← egen token, exponeras längst ned
+   ============================================================================ */
+
+/* ----------------------------------------------------------------------------
+   1) PRIMITIVA FÄRGER — mode-agnostiska. Genererar även utilities (bg-green-600 …).
+      `static` = variablerna skrivs alltid ut, även om ingen utility använder dem
+      (de semantiska tokens nedan slår upp dem via var()).
+   ---------------------------------------------------------------------------- */
+@theme static {
+  --color-white: oklch(1 0 0);
+  --color-black: oklch(0 0 0);
+
+  /* Grön · primär ------------------------------------------------------------ */
+  --color-green-50: oklch(0.9819 0.0181 155.83);
+  --color-green-100: oklch(0.9624 0.0434 156.74);
+  --color-green-200: oklch(0.925 0.0806 155.99);
+  --color-green-300: oklch(0.8712 0.1363 154.45);
+  --color-green-400: oklch(0.8003 0.1821 151.71);
+  --color-green-500: oklch(0.7227 0.192 149.58);
+  --color-green-600: oklch(0.6271 0.1699 149.21);
+  --color-green-700: oklch(0.5273 0.1371 150.07);
+  --color-green-800: oklch(0.4479 0.1083 151.33);
+  --color-green-900: oklch(0.3925 0.0896 152.54);
+
+  /* Orange · accent/sekundär ------------------------------------------------- */
+  --color-orange-50: oklch(0.9796 0.0158 73.68);
+  --color-orange-100: oklch(0.9542 0.0372 75.16);
+  --color-orange-200: oklch(0.9015 0.0729 70.7);
+  --color-orange-300: oklch(0.8366 0.1165 66.29);
+  --color-orange-400: oklch(0.7576 0.159 55.93);
+  --color-orange-500: oklch(0.7049 0.1867 47.6);
+  --color-orange-600: oklch(0.6461 0.1943 41.12);
+  --color-orange-700: oklch(0.5534 0.1739 38.4);
+  --color-orange-800: oklch(0.4698 0.143 37.3);
+  --color-orange-900: oklch(0.4084 0.1165 38.17);
+
+  /* Stone · neutral ---------------------------------------------------------- */
+  --color-stone-50: oklch(0.9848 0.0013 106.42);
+  --color-stone-100: oklch(0.9699 0.0013 106.42);
+  --color-stone-200: oklch(0.9232 0.0026 48.72);
+  --color-stone-300: oklch(0.8687 0.0043 56.37);
+  --color-stone-400: oklch(0.7161 0.0091 56.26);
+  --color-stone-500: oklch(0.5534 0.0116 58.07);
+  --color-stone-600: oklch(0.4444 0.0096 73.64);
+  --color-stone-700: oklch(0.3741 0.0087 67.56);
+  --color-stone-800: oklch(0.2685 0.0063 34.3);
+  --color-stone-900: oklch(0.2161 0.0061 56.04);
+  --color-stone-950: oklch(0.1469 0.0041 49.25);
+
+  /* Amber · warning ---------------------------------------------------------- */
+  --color-amber-50: oklch(0.9869 0.0214 95.28);
+  --color-amber-100: oklch(0.9619 0.058 95.62);
+  --color-amber-200: oklch(0.9243 0.1151 95.75);
+  --color-amber-300: oklch(0.879 0.1534 91.61);
+  --color-amber-400: oklch(0.8369 0.1644 84.43);
+  --color-amber-500: oklch(0.7686 0.1647 70.08);
+  --color-amber-600: oklch(0.6658 0.1574 58.32);
+  --color-amber-700: oklch(0.5553 0.1455 49);
+  --color-amber-800: oklch(0.4732 0.1247 46.2);
+  --color-amber-900: oklch(0.4137 0.1054 45.9);
+
+  /* Red · danger ------------------------------------------------------------- */
+  --color-red-50: oklch(0.9705 0.0129 17.38);
+  --color-red-100: oklch(0.9356 0.0309 17.72);
+  --color-red-200: oklch(0.8845 0.0593 18.33);
+  --color-red-300: oklch(0.8077 0.1035 19.57);
+  --color-red-400: oklch(0.7106 0.1661 22.22);
+  --color-red-500: oklch(0.6368 0.2078 25.33);
+  --color-red-600: oklch(0.5771 0.2152 27.33);
+  --color-red-700: oklch(0.5054 0.1905 27.52);
+  --color-red-800: oklch(0.4437 0.1613 26.9);
+  --color-red-900: oklch(0.3958 0.1331 25.72);
+
+  /* Kategorifärger (produkter/recept) — para alltid med ikon + etikett -------- */
+  --color-cat-produce: oklch(0.6271 0.1699 149.21); /* #16A34A grönt   */
+  --color-cat-protein: oklch(0.5771 0.2152 27.33); /* #DC2626 kött    */
+  --color-cat-seafood: oklch(0.6089 0.1109 221.72); /* #0891B2 fisk    */
+  --color-cat-dairy: oklch(0.5461 0.2152 262.88); /* #2563EB mejeri  */
+  --color-cat-bakery: oklch(0.6461 0.1943 41.12); /* #EA580C bageri  */
+  --color-cat-grains: oklch(0.5553 0.1455 49); /* #B45309 skafferi*/
+  --color-cat-fruit: oklch(0.5916 0.218 0.58); /* #DB2777 frukt   */
+  --color-cat-beverages: oklch(0.6002 0.1038 184.7); /* #0D9488 dryck   */
+  --color-cat-frozen: oklch(0.7535 0.139 232.66); /* #38BDF8 fryst   */
+  --color-cat-snacks: oklch(0.5575 0.2525 302.32); /* #9333EA snacks  */
+  --color-cat-spices: oklch(0.6658 0.1574 58.32); /* #D97706 kryddor */
+  --color-cat-household: oklch(0.4444 0.0096 73.64); /* #57534E hushåll */
+}
+
+/* ----------------------------------------------------------------------------
+   2) SEMANTISKA TOKENS — växlar mellan ljust och mörkt via @variant.
+
+      OBS: @theme får BARA innehålla custom properties och @keyframes — inga
+      nästlade regler. Mode-beroende tokens hör därför hemma i
+      @layer theme { :root { … } }, exakt som heroui-native/styles/variables.css.
+   ---------------------------------------------------------------------------- */
+@layer theme {
+  :root {
+    /* ===================== LJUST TEMA ===================== */
+    @variant light {
+      /* Bas */
+      --background: var(--color-stone-50); /* #FAFAF9 */
+      --foreground: var(--color-stone-900); /* #1C1917  17.5:1 AAA */
+      --link: var(--accent);
+
+      /* Ytor (kort, listor, paneler) */
+      --surface: var(--color-white); /* #FFFFFF */
+      --surface-foreground: var(--color-stone-900);
+      --surface-secondary: var(--color-stone-100); /* #F5F5F4 */
+      --surface-secondary-foreground: var(--color-stone-900);
+      --surface-tertiary: var(--color-stone-200); /* #E7E5E4 */
+      --surface-tertiary-foreground: var(--color-stone-900);
+
+      /* Overlays (dialog, popover, sheet) */
+      --overlay: var(--color-white);
+      --overlay-foreground: var(--color-stone-900);
+      --backdrop: oklch(0.2161 0.0061 56.04 / 40%);
+
+      /* Neutralt & text */
+      --muted: var(--color-stone-500); /* #78716C  4.8:1 AA (captions) */
+      --default: var(--color-stone-200); /* #E7E5E4 */
+      --default-foreground: var(--color-stone-900);
+      --border: var(--color-stone-200); /* #E7E5E4 */
+      --separator: var(--color-stone-300); /* #D6D3D1 */
+      --focus: var(--accent);
+
+      /* Accent = PRIMÄR (grön) */
+      --accent: var(--color-green-700); /* #15803D  vit text 5.0:1 AA */
+      --accent-foreground: var(--color-white);
+      --accent-soft: var(--color-green-50); /* #F0FDF4 */
+      --accent-soft-foreground: var(--color-green-800); /* #166534 */
+
+      /* Sekundär = CTA (orange) — egen token */
+      --secondary: var(--color-orange-600); /* #EA580C  mörk text (ej vit!) */
+      --secondary-foreground: var(--color-stone-900);
+      --secondary-soft: var(--color-orange-100); /* #FFEDD5 */
+      --secondary-soft-foreground: var(--color-orange-700); /* #C2410C */
+
+      /* Success (grön familj) */
+      --success: var(--color-green-600); /* #16A34A */
+      --success-foreground: var(--color-white);
+      --success-soft: var(--color-green-50);
+      --success-soft-foreground: var(--color-green-800);
+
+      /* Warning (bärnsten) */
+      --warning: var(--color-amber-500); /* #F59E0B  mörk text */
+      --warning-foreground: var(--color-stone-900);
+      --warning-soft: var(--color-amber-100); /* #FEF3C7 */
+      --warning-soft-foreground: var(--color-amber-700); /* #B45309  5.0:1 AA */
+
+      /* Danger (röd) */
+      --danger: var(--color-red-600); /* #DC2626  vit text 4.5:1 AA */
+      --danger-foreground: var(--color-white);
+      --danger-soft: var(--color-red-100); /* #FEE2E2 */
+      --danger-soft-foreground: var(--color-red-700); /* #B91C1C  6.5:1 AA */
+
+      /* Formulärfält */
+      --field-background: var(--color-stone-100); /* #F5F5F4 */
+      --field-foreground: var(--color-stone-900);
+      --field-border: var(--color-stone-200);
+    }
+
+    /* ===================== MÖRKT TEMA ===================== */
+    @variant dark {
+      /* Bas — varm nästan-svart, aldrig #000000 */
+      --background: var(--color-stone-900); /* #1C1917 */
+      --foreground: var(--color-stone-100); /* #F5F5F4  16.0:1 AAA (ej ren vit) */
+      --link: var(--accent);
+
+      /* Ytor — elevation via ljusare grå, inte skuggor */
+      --surface: var(--color-stone-800); /* #292524 */
+      --surface-foreground: var(--color-stone-100);
+      --surface-secondary: var(--color-stone-700); /* #44403C */
+      --surface-secondary-foreground: var(--color-stone-100);
+      --surface-tertiary: var(--color-stone-600); /* #57534E */
+      --surface-tertiary-foreground: var(--color-stone-100);
+
+      /* Overlays */
+      --overlay: var(--color-stone-800);
+      --overlay-foreground: var(--color-stone-100);
+      --backdrop: oklch(0 0 0 / 60%);
+
+      /* Neutralt & text */
+      --muted: var(--color-stone-400); /* #A8A29E  6.9:1 AA på bg */
+      --default: var(--color-stone-700); /* #44403C */
+      --default-foreground: var(--color-stone-100);
+      --border: var(--color-stone-700); /* #44403C */
+      --separator: var(--color-stone-600); /* #57534E */
+      --focus: var(--accent);
+
+      /* Accent = PRIMÄR (ljusare grön, mörk förgrund) */
+      --accent: var(--color-green-400); /* #4ADE80  mörk text 10.0:1 AAA */
+      --accent-foreground: var(--color-stone-900);
+      --accent-soft: var(--color-green-900); /* #14532D */
+      --accent-soft-foreground: var(--color-green-300); /* #86EFAC */
+
+      /* Sekundär = CTA (ljusare orange, mörk förgrund) */
+      --secondary: var(--color-orange-400); /* #FB923C  mörk text 7.7:1 AAA */
+      --secondary-foreground: var(--color-stone-900);
+      --secondary-soft: var(--color-orange-900); /* #7C2D12 */
+      --secondary-soft-foreground: var(--color-orange-300); /* #FDBA74 */
+
+      /* Success */
+      --success: var(--color-green-400); /* #4ADE80 */
+      --success-foreground: var(--color-stone-900);
+      --success-soft: var(--color-green-900);
+      --success-soft-foreground: var(--color-green-300);
+
+      /* Warning */
+      --warning: var(--color-amber-400); /* #FBBF24  mörk text 10.5:1 AAA */
+      --warning-foreground: var(--color-stone-900);
+      --warning-soft: var(--color-amber-900); /* #78350F */
+      --warning-soft-foreground: var(--color-amber-200); /* #FDE68A */
+
+      /* Danger */
+      --danger: var(--color-red-400); /* #F87171  mörk text 6.3:1 AA */
+      --danger-foreground: var(--color-stone-900);
+      --danger-soft: var(--color-red-900); /* #7F1D1D */
+      --danger-soft-foreground: var(--color-red-300); /* #FCA5A5 */
+
+      /* Formulärfält */
+      --field-background: var(--color-stone-800); /* #292524 */
+      --field-foreground: var(--color-stone-100);
+      --field-border: var(--color-stone-700);
+    }
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   3) EXPONERA EGNA TOKENS för Tailwind-utilities (bg-secondary, text-secondary …).
+      De inbyggda HeroUI-tokens (accent, success, warning, danger, surface …) är
+      redan mappade av heroui-native/styles och behöver inte upprepas här.
+   ---------------------------------------------------------------------------- */
+@theme inline static {
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary-soft: var(--secondary-soft);
+  --color-secondary-soft-foreground: var(--secondary-soft-foreground);
+}
