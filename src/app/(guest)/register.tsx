@@ -1,8 +1,8 @@
 import {
-  PasswordFields,
-  type PasswordFieldValues,
-} from "@/components/password-fields";
-import { useAuth } from "@/contexts/auth-context";
+    PasswordFields,
+    type PasswordFieldValues,
+} from "@/features/auth/components/password-fields";
+import { useAuth } from "@/features/auth/contexts/auth-context";
 import { isAuthError } from "@supabase/supabase-js";
 import { useRouter } from "expo-router";
 import { Button } from "heroui-native/button";
@@ -15,11 +15,11 @@ import { TextField } from "heroui-native/text-field";
 import { useRef } from "react";
 import { Controller, useForm, type SubmitHandler } from "react-hook-form";
 import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  TextInput,
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    TextInput,
 } from "react-native";
 
 type FormValues = PasswordFieldValues & {

@@ -13,14 +13,22 @@
 @source '../node_modules/heroui-native/lib';
 
 :root {
-  --font-display:
-    Spline Sans, Inter, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji,
-    Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
-  --font-mono:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono,
-    Courier New, monospace;
-  --font-rounded:
-    "SF Pro Rounded", "Hiragino Maru Gothic ProN", Meiryo, "MS PGothic",
-    sans-serif;
-  --font-serif: Georgia, "Times New Roman", serif;
+  --font-normal: "Nunito_400Regular";
+  --font-medium: "Nunito_500Medium";
+  --font-semibold: "Nunito_600SemiBold";
+  --font-bold: "Nunito_700Bold";
+}
+
+@theme {
+  --font-heading: "Fredoka_600SemiBold";
+  --font-body: "Nunito_400Regular";
+}
+
+.text__root--type-h1,
+.text__root--type-h2,
+.text__root--type-h3,
+.text__root--type-h4,
+.text__root--type-h5,
+.text__root--type-h6 {
+  font-family: var(--font-heading);
 }

@@ -1,12 +1,16 @@
 import {
-  PasswordFields,
-  type PasswordFieldValues,
-} from "@/components/password-fields";
-import { useAuth } from "@/contexts/auth-context";
+    PasswordFields,
+    type PasswordFieldValues,
+} from "@/features/auth/components/password-fields";
+import { useAuth } from "@/features/auth/contexts/auth-context";
 import { isAuthError } from "@supabase/supabase-js";
 import { Button, FieldError, Typography } from "heroui-native";
 import { SubmitHandler, useForm } from "react-hook-form";
-import { ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
+import {
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
+} from "react-native";
 
 // Reached only through a recovery link — the root guard swaps the whole app for
 // this screen. No current password is asked for here: the user is on this

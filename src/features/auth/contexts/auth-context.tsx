@@ -10,7 +10,7 @@ import {
   useState,
 } from "react";
 
-type AuthUser = {
+export type AuthUser = {
   id: string;
   email: string;
   name?: string;
