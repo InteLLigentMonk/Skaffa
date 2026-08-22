@@ -178,7 +178,9 @@
     @variant dark {
       /* Bas — varm nästan-svart, aldrig #000000 */
       --background: var(--color-stone-900); /* #1C1917 */
-      --foreground: var(--color-stone-100); /* #F5F5F4  16.0:1 AAA (ej ren vit) */
+      --foreground: var(
+        --color-stone-100
+      ); /* #F5F5F4  16.0:1 AAA (ej ren vit) */
       --link: var(--accent);
 
       /* Ytor — elevation via ljusare grå, inte skuggor */

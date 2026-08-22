@@ -1,11 +1,11 @@
-import { useAuth } from "@/contexts/auth-context";
+import { useAuth } from "@/features/auth/contexts/auth-context";
 import {
-  Alert,
-  Button,
-  FieldError,
-  Input,
-  Label,
-  TextField,
+    Alert,
+    Button,
+    FieldError,
+    Input,
+    Label,
+    TextField,
 } from "heroui-native";
 import { Typography } from "heroui-native/text";
 import { useState } from "react";

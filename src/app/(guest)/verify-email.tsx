@@ -1,14 +1,14 @@
-import { useAuth } from "@/contexts/auth-context";
+import { useAuth } from "@/features/auth/contexts/auth-context";
 import { useResendCooldown } from "@/hooks/use-resend-cooldown";
 import { isAuthError } from "@supabase/supabase-js";
 import { Redirect, useLocalSearchParams } from "expo-router";
 import {
-  FieldError,
-  InputOTP,
-  LinkButton,
-  REGEXP_ONLY_DIGITS,
-  Typography,
-  type InputOTPRef,
+    FieldError,
+    InputOTP,
+    LinkButton,
+    REGEXP_ONLY_DIGITS,
+    Typography,
+    type InputOTPRef,
 } from "heroui-native";
 import { useRef } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";

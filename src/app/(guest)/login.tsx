@@ -1,4 +1,4 @@
-import { useAuth } from "@/contexts/auth-context";
+import { useAuth } from "@/features/auth/contexts/auth-context";
 import { isAuthError } from "@supabase/supabase-js";
 import { Link, useRouter } from "expo-router";
 import { Alert, Button } from "heroui-native";
@@ -10,11 +10,11 @@ import { TextField } from "heroui-native/text-field";
 import { useRef } from "react";
 import { Controller, useForm, type SubmitHandler } from "react-hook-form";
 import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  TextInput,
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    TextInput,
 } from "react-native";
 
 type FormValues = {
@@ -149,7 +149,10 @@ const Login = () => {
             <TextField isRequired isInvalid={!!fieldState.error}>
               <Label>Lösenord</Label>
               <Input
+                ref={passwordRef}
                 placeholder="Lösenord"
+                autoCapitalize="none"
+                autoComplete="password"
                 secureTextEntry
                 value={field.value}
                 onBlur={field.onBlur}

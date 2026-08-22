@@ -1,25 +1,25 @@
 import {
-  PasswordFields,
-  SecureInput,
-  type PasswordFieldValues,
-} from "@/components/password-fields";
-import { useAuth } from "@/contexts/auth-context";
+    PasswordFields,
+    SecureInput,
+    type PasswordFieldValues,
+} from "@/features/auth/components/password-fields";
+import { useAuth } from "@/features/auth/contexts/auth-context";
 import { isAuthError } from "@supabase/supabase-js";
 import {
-  Alert,
-  Button,
-  FieldError,
-  Label,
-  TextField,
-  Typography,
+    Alert,
+    Button,
+    FieldError,
+    Label,
+    TextField,
+    Typography,
 } from "heroui-native";
 import { useRef, useState } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
 import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  TextInput,
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
+    TextInput,
 } from "react-native";
 import Animated, { FadeInDown, FadeOut } from "react-native-reanimated";
 
@@ -54,7 +54,8 @@ const ChangePassword = () => {
       if (!isAuthError(error)) {
         console.error("Error occurred while updating password:", error);
         setError("root", {
-          message: "Det gick inte att uppdatera lösenordet. Försök igen senare.",
+          message:
+            "Det gick inte att uppdatera lösenordet. Försök igen senare.",
         });
         return;
       }

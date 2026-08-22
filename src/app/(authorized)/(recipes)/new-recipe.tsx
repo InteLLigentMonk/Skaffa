@@ -1,7 +1,7 @@
 import { Typography } from "heroui-native";
 import { View } from "react-native";
 
-const NewRecepie = () => {
+const NewRecipe = () => {
   return (
     <View className="flex-1 gap-4 p-8">
       <Typography.Heading type="h2" weight="semibold">
@@ -11,4 +11,4 @@ const NewRecepie = () => {
   );
 };
 
-export default NewRecepie;
+export default NewRecipe;
