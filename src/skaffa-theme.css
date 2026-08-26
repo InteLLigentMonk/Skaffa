@@ -235,9 +235,9 @@
       --danger-soft-foreground: var(--color-red-300); /* #FCA5A5 */
 
       /* Formulärfält */
-      --field-background: var(--color-stone-800); /* #292524 */
+      --field-background: var(--color-stone-700); /* #292524 */
       --field-foreground: var(--color-stone-100);
-      --field-border: var(--color-stone-700);
+      --field-border: var(--color-stone-600);
     }
   }
 }
