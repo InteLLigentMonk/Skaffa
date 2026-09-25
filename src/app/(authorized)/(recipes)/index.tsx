@@ -1,20 +1,24 @@
-import Fab from "@/app/components/fab";
-import AddRecipeSheet from "@/features/recipes/components/add-recipe-sheet";
-import SearchBar from "@/features/recipes/components/search-bar";
+import Fab from "@/components/fab";
+import SearchBar from "@/components/search-bar";
+import { useRouter } from "expo-router";
 import { useState } from "react";
 import { View } from "react-native";
 
-const index = () => {
-  const [isOpen, setIsOpen] = useState(false);
+const RecipeIndex = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const router = useRouter();
 
   return (
     <View className="flex-1 gap-2 p-safe-offset-8">
-      <SearchBar />
+      <SearchBar
+        onChange={setSearchTerm}
+        value={searchTerm}
+        placeholder="Sök recept"
+      />
 
-      <Fab onPress={() => setIsOpen(true)} />
-      <AddRecipeSheet isOpen={isOpen} setIsOpen={setIsOpen} />
+      <Fab onPress={() => router.push("/add-recipe")} />
     </View>
   );
 };
 
-export default index;
+export default RecipeIndex;

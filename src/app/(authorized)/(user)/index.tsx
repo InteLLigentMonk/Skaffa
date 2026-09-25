@@ -7,7 +7,7 @@ import { withUniwind } from "uniwind";
 
 const StyledIonicons = withUniwind(Ionicons);
 
-const index = () => {
+const UserIndex = () => {
   const auth = useAuth();
 
   return (
@@ -52,4 +52,4 @@ const index = () => {
   );
 };
 
-export default index;
+export default UserIndex;
