@@ -1,4 +1,4 @@
-import { UnitType } from "@/lib/types";
+import { UnitCode, UnitDimension } from "@/lib/units";
 
 export type RecipeFormValues = {
   name: string;
@@ -9,7 +9,10 @@ export type RecipeFormValues = {
 
 export type RecipeIngredientRow = {
   ingredientId: string;
+  homeId: string | null;
   amount: string;
   name: string;
-  unit: UnitType;
+  dimension: UnitDimension;
+  density: number | null;
+  unit: UnitCode;
 };

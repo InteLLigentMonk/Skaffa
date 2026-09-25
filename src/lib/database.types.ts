@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.17"
+    PostgrestVersion: "14.5"
   }
   graphql_public: {
     Tables: {
@@ -116,32 +116,35 @@ export type Database = {
         Row: {
           category: Database["public"]["Enums"]["ingredient_category"]
           created_at: string
+          density_g_per_ml: number | null
           diet_tag: Database["public"]["Enums"]["diet_class"] | null
+          dimension: Database["public"]["Enums"]["unit_dimension"]
           home_id: string | null
           id: string
           name: string
           package_size: string | null
-          unit: Database["public"]["Enums"]["unit_type"]
         }
         Insert: {
           category: Database["public"]["Enums"]["ingredient_category"]
           created_at?: string
+          density_g_per_ml?: number | null
           diet_tag?: Database["public"]["Enums"]["diet_class"] | null
+          dimension: Database["public"]["Enums"]["unit_dimension"]
           home_id?: string | null
           id?: string
           name: string
           package_size?: string | null
-          unit: Database["public"]["Enums"]["unit_type"]
         }
         Update: {
           category?: Database["public"]["Enums"]["ingredient_category"]
           created_at?: string
+          density_g_per_ml?: number | null
           diet_tag?: Database["public"]["Enums"]["diet_class"] | null
+          dimension?: Database["public"]["Enums"]["unit_dimension"]
           home_id?: string | null
           id?: string
           name?: string
           package_size?: string | null
-          unit?: Database["public"]["Enums"]["unit_type"]
         }
         Relationships: [
           {
@@ -269,19 +272,25 @@ export type Database = {
       }
       public_recipe_ingredients: {
         Row: {
-          amount: number
+          amount_base: number
+          display_amount: number
+          display_unit: Database["public"]["Enums"]["unit_code"]
           id: string
           ingredient_id: string
           public_recipe_id: string
         }
         Insert: {
-          amount: number
+          amount_base?: number
+          display_amount: number
+          display_unit: Database["public"]["Enums"]["unit_code"]
           id?: string
           ingredient_id: string
           public_recipe_id: string
         }
         Update: {
-          amount?: number
+          amount_base?: number
+          display_amount?: number
+          display_unit?: Database["public"]["Enums"]["unit_code"]
           id?: string
           ingredient_id?: string
           public_recipe_id?: string
@@ -392,19 +401,25 @@ export type Database = {
       }
       recipe_ingredients: {
         Row: {
-          amount: number
+          amount_base: number
+          display_amount: number
+          display_unit: Database["public"]["Enums"]["unit_code"]
           id: string
           ingredient_id: string
           recipe_id: string
         }
         Insert: {
-          amount: number
+          amount_base?: number
+          display_amount: number
+          display_unit: Database["public"]["Enums"]["unit_code"]
           id?: string
           ingredient_id: string
           recipe_id: string
         }
         Update: {
-          amount?: number
+          amount_base?: number
+          display_amount?: number
+          display_unit?: Database["public"]["Enums"]["unit_code"]
           id?: string
           ingredient_id?: string
           recipe_id?: string
@@ -521,31 +536,31 @@ export type Database = {
       }
       recurring_items: {
         Row: {
-          amount: number | null
+          amount_base: number | null
           created_at: string
+          dimension: Database["public"]["Enums"]["unit_dimension"] | null
           home_id: string
           id: string
           ingredient_id: string | null
           name: string
-          unit: Database["public"]["Enums"]["unit_type"] | null
         }
         Insert: {
-          amount?: number | null
+          amount_base?: number | null
           created_at?: string
+          dimension?: Database["public"]["Enums"]["unit_dimension"] | null
           home_id: string
           id?: string
           ingredient_id?: string | null
           name: string
-          unit?: Database["public"]["Enums"]["unit_type"] | null
         }
         Update: {
-          amount?: number | null
+          amount_base?: number | null
           created_at?: string
+          dimension?: Database["public"]["Enums"]["unit_dimension"] | null
           home_id?: string
           id?: string
           ingredient_id?: string | null
           name?: string
-          unit?: Database["public"]["Enums"]["unit_type"] | null
         }
         Relationships: [
           {
@@ -596,6 +611,7 @@ export type Database = {
           category: Database["public"]["Enums"]["ingredient_category"] | null
           checked: boolean
           created_at: string
+          dimension: Database["public"]["Enums"]["unit_dimension"] | null
           id: string
           ingredient_id: string | null
           is_orphaned: boolean
@@ -603,13 +619,13 @@ export type Database = {
           name: string
           recurring_item_id: string | null
           source: Database["public"]["Enums"]["list_item_source"]
-          unit: Database["public"]["Enums"]["unit_type"] | null
         }
         Insert: {
           amount?: number | null
           category?: Database["public"]["Enums"]["ingredient_category"] | null
           checked?: boolean
           created_at?: string
+          dimension?: Database["public"]["Enums"]["unit_dimension"] | null
           id?: string
           ingredient_id?: string | null
           is_orphaned?: boolean
@@ -617,13 +633,13 @@ export type Database = {
           name: string
           recurring_item_id?: string | null
           source: Database["public"]["Enums"]["list_item_source"]
-          unit?: Database["public"]["Enums"]["unit_type"] | null
         }
         Update: {
           amount?: number | null
           category?: Database["public"]["Enums"]["ingredient_category"] | null
           checked?: boolean
           created_at?: string
+          dimension?: Database["public"]["Enums"]["unit_dimension"] | null
           id?: string
           ingredient_id?: string | null
           is_orphaned?: boolean
@@ -631,7 +647,6 @@ export type Database = {
           name?: string
           recurring_item_id?: string | null
           source?: Database["public"]["Enums"]["list_item_source"]
-          unit?: Database["public"]["Enums"]["unit_type"] | null
         }
         Relationships: [
           {
@@ -889,6 +904,17 @@ export type Database = {
       shares_home_with: { Args: { _user_id: string }; Returns: boolean }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      unit_dimension_of: {
+        Args: { _unit: Database["public"]["Enums"]["unit_code"] }
+        Returns: Database["public"]["Enums"]["unit_dimension"]
+      }
+      unit_to_base: {
+        Args: {
+          _amount: number
+          _unit: Database["public"]["Enums"]["unit_code"]
+        }
+        Returns: number
+      }
       week_monday: { Args: { _d: string }; Returns: string }
     }
     Enums: {
@@ -917,13 +943,18 @@ export type Database = {
         | "middag"
         | "snacks"
       member_role: "owner" | "member"
-      unit_type:
+      unit_code:
         | "gram"
+        | "kilogram"
+        | "milliliter"
+        | "centiliter"
         | "deciliter"
-        | "tesked"
+        | "liter"
         | "matsked"
+        | "tesked"
         | "kryddmatt"
         | "styck"
+      unit_dimension: "vikt" | "volym" | "antal"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -939,12 +970,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -968,11 +999,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -993,11 +1024,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1018,11 +1049,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1035,11 +1066,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1081,14 +1112,19 @@ export const Constants = {
         "snacks",
       ],
       member_role: ["owner", "member"],
-      unit_type: [
+      unit_code: [
         "gram",
+        "kilogram",
+        "milliliter",
+        "centiliter",
         "deciliter",
-        "tesked",
+        "liter",
         "matsked",
+        "tesked",
         "kryddmatt",
         "styck",
       ],
+      unit_dimension: ["vikt", "volym", "antal"],
     },
   },
 } as const
