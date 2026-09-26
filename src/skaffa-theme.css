@@ -99,6 +99,7 @@
   --color-cat-snacks: oklch(0.5575 0.2525 302.32); /* #9333EA snacks  */
   --color-cat-spices: oklch(0.6658 0.1574 58.32); /* #D97706 kryddor */
   --color-cat-household: oklch(0.4444 0.0096 73.64); /* #57534E hushåll */
+  --color-cat-other: oklch(0.7161 0.0091 56.26); /* #A8A29E övrigt  */
 }
 
 /* ----------------------------------------------------------------------------
@@ -235,9 +236,9 @@
       --danger-soft-foreground: var(--color-red-300); /* #FCA5A5 */
 
       /* Formulärfält */
-      --field-background: var(--color-stone-800); /* #292524 */
+      --field-background: var(--color-stone-700); /* #292524 */
       --field-foreground: var(--color-stone-100);
-      --field-border: var(--color-stone-700);
+      --field-border: var(--color-stone-600);
     }
   }
 }

@@ -10,7 +10,7 @@ const index = () => {
       </Typography.Heading>
       <Button
         feedbackVariant="scale-ripple"
-        onPress={() => router.push("/new-recepie")}
+        onPress={() => router.push("/new-recipe")}
       >
         <Button.Label>Nytt recept</Button.Label>
       </Button>

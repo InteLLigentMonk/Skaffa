@@ -11,6 +11,7 @@ import {
   Nunito_700Bold,
   useFonts,
 } from "@expo-google-fonts/nunito";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SplashScreen, Stack, ThemeProvider, useTheme } from "expo-router";
 import * as SystemUI from "expo-system-ui";
 import { HeroUINativeProvider } from "heroui-native";
@@ -41,6 +42,13 @@ const RootNavigator = () => {
     >
       <Stack.Protected guard={isAuthenticated && !isRecoverySession}>
         <Stack.Screen name="(authorized)" options={{ headerShown: false }} />
+        <Stack.Screen
+          name="add-recipe"
+          options={{
+            presentation: "modal",
+            headerShown: false,
+          }}
+        />
       </Stack.Protected>
       {/* A recovery link takes over the entire app until a new password is
           set, so the user cannot tab away while the old one is still valid. */}
@@ -59,6 +67,14 @@ const RootNavigator = () => {
     </Stack>
   );
 };
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+    },
+  },
+});
 
 export default function RootLayout() {
   const navigationTheme = useNavigationTheme();
@@ -79,13 +95,15 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <HeroUINativeProvider>
-        <AuthProvider>
-          <ThemeProvider value={navigationTheme}>
-            <RootNavigator />
-          </ThemeProvider>
-        </AuthProvider>
-      </HeroUINativeProvider>
+      <QueryClientProvider client={queryClient}>
+        <HeroUINativeProvider>
+          <AuthProvider>
+            <ThemeProvider value={navigationTheme}>
+              <RootNavigator />
+            </ThemeProvider>
+          </AuthProvider>
+        </HeroUINativeProvider>
+      </QueryClientProvider>
     </GestureHandlerRootView>
   );
 }

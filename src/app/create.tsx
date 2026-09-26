@@ -6,7 +6,7 @@ import { withUniwind } from "uniwind";
 
 const StyledIonicons = withUniwind(Ionicons);
 
-type CreateHref = "/new-product" | "/new-recepie";
+type CreateHref = "/new-product" | "/new-recipe";
 
 const Create = () => {
   const router = useRouter();
@@ -33,7 +33,7 @@ const Create = () => {
         />
         <Button.Label>Produkt</Button.Label>
       </Button>
-      <Button variant="secondary" onPress={() => openScreen("/new-recepie")}>
+      <Button variant="secondary" onPress={() => openScreen("/new-recipe")}>
         <StyledIonicons
           name="library-outline"
           size={20}

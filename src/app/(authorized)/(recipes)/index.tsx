@@ -1,14 +1,24 @@
-import { Typography } from "heroui-native/text";
+import Fab from "@/components/fab";
+import SearchBar from "@/components/search-bar";
+import { useRouter } from "expo-router";
+import { useState } from "react";
 import { View } from "react-native";
 
-const index = () => {
+const RecipeIndex = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const router = useRouter();
+
   return (
-    <View className="flex-1 items-center justify-center gap-2 p-safe-offset-8">
-      <Typography.Heading type="h1" align="center" weight="bold">
-        Recept
-      </Typography.Heading>
+    <View className="flex-1 gap-2 p-safe-offset-8">
+      <SearchBar
+        onChange={setSearchTerm}
+        value={searchTerm}
+        placeholder="Sök recept"
+      />
+
+      <Fab onPress={() => router.push("/add-recipe")} />
     </View>
   );
 };
 
-export default index;
+export default RecipeIndex;

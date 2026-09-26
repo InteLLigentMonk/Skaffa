@@ -6,7 +6,7 @@ import HomeTopBar from "@/features/home/components/home-top-bar";
 import { useState } from "react";
 import { ScrollView, View } from "react-native";
 
-const index = () => {
+const HomeIndex = () => {
   const [scrolled, setScrolled] = useState(false);
 
   const auth = useAuth();
@@ -28,4 +28,4 @@ const index = () => {
   );
 };
 
-export default index;
+export default HomeIndex;
