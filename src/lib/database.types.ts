@@ -880,6 +880,10 @@ export type Database = {
       }
       complete_storage_cleanup: { Args: { _ids: number[] }; Returns: undefined }
       create_home: { Args: { _name: string }; Returns: string }
+      create_recipe: {
+        Args: { _ingredients: Json; _name: string; _servings: number }
+        Returns: string
+      }
       current_home_id: { Args: never; Returns: string }
       delete_home: { Args: { _home_id: string }; Returns: undefined }
       enqueue_storage_delete: {

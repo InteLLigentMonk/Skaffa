@@ -6,6 +6,7 @@ import {
   NameField,
   UnitField,
 } from "@/features/recipes/components/recipe-form-fields";
+import { useCreateRecipe } from "@/features/recipes/hooks/use-recipes";
 import { RecipeFormValues } from "@/features/recipes/recipe-types";
 import { StyledIonicons } from "@/utils/helpers";
 import { useRouter } from "expo-router";
@@ -22,9 +23,11 @@ import { Controller, useFieldArray, useFormContext } from "react-hook-form";
 import { ScrollView, View } from "react-native";
 const AddRecipeScreen = () => {
   const router = useRouter();
+  const { mutate, isPending } = useCreateRecipe();
   const {
     control,
     handleSubmit,
+    setError,
     formState: { errors },
   } = useFormContext<RecipeFormValues>();
   const { fields, remove } = useFieldArray({
@@ -138,21 +141,39 @@ const AddRecipeScreen = () => {
           </Typography.Paragraph>
         </Surface>
       </ScrollView>
-      <View className="flex flex-row items-center justify-between gap-4">
-        <Button variant="tertiary" className="rounded-2xl">
-          <Typography.Heading type="h6" weight="bold">
-            Steg
-          </Typography.Heading>
-        </Button>
-        <Button
-          variant="primary"
-          onPress={handleSubmit((value) => console.log(value))}
-          className="grow rounded-2xl"
-        >
-          <Typography.Heading type="h6" weight="bold" className="text-white">
-            Spara recept
-          </Typography.Heading>
-        </Button>
+      <View className="gap-2">
+        <FieldError isInvalid={!!errors.root}>
+          {errors.root?.message}
+        </FieldError>
+        <View className="flex flex-row items-center justify-between gap-4">
+          <Button variant="tertiary" className="rounded-2xl">
+            <Typography.Heading type="h6" weight="bold">
+              Steg
+            </Typography.Heading>
+          </Button>
+          <Button
+            isDisabled={isPending}
+            variant="primary"
+            onPress={handleSubmit((values) =>
+              mutate(values, {
+                onSuccess: () => router.back(),
+                onError: (error) => {
+                  setError("root", {
+                    message:
+                      error.code === "P0001"
+                        ? error.message
+                        : "Kunde inte spara receptet, försök igen senare",
+                  });
+                },
+              }),
+            )}
+            className="grow rounded-2xl"
+          >
+            <Typography.Heading type="h6" weight="bold" className="text-white">
+              Spara recept
+            </Typography.Heading>
+          </Button>
+        </View>
       </View>
     </ModalScreen>
   );
