@@ -1,4 +1,4 @@
-import { useCurrentHome } from "@/features/home/hooks/use-current-home";
+import { useHome } from "@/features/home/hooks/use-home";
 import Category from "@/features/ingredients/components/category";
 import { useCreateIngredient } from "@/features/ingredients/hooks/use-ingredients";
 import {
@@ -27,11 +27,11 @@ import ModalScreen from "../../components/modal-screen";
 
 const NewIngredient = () => {
   const { name } = useLocalSearchParams<{ name: string }>();
-  const { data: homeId } = useCurrentHome();
+  const { data: home } = useHome();
   const router = useRouter();
-  const onBack = () => router.back();
-
   const { mutate, isPending } = useCreateIngredient();
+
+  const onBack = () => router.back();
 
   const categories = Object.keys(
     CATEGORY_LABELS,
@@ -247,12 +247,12 @@ const NewIngredient = () => {
         </ScrollView>
         <Button
           variant="primary"
-          isDisabled={!homeId || isPending}
+          isDisabled={!home || isPending}
           onPress={handleSubmit((values) => {
-            if (!homeId) return;
+            if (!home) return;
             mutate(
               {
-                homeId,
+                homeId: home.id,
                 name: values.name,
                 category: values.category!,
                 dimension: values.dimension!,
