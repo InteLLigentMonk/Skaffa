@@ -18,6 +18,10 @@ när mer än en person rör databasen.
 | `20260908201104_amount_base_default.sql` | Default på `amount_base` så kolumnen blir valfri i klienttyperna |
 | `20260908202423_seed_ingredients_dimensions.sql` | Frödatabasen v2: samma 314 rader med `dimension` |
 | `20260908205759_seed_ingredient_densities.sql` | `density_g_per_ml` för 8 torrvaror (källa: ICA) |
+| `20260925135806_create_recipe.sql` | RPC `create_recipe`: receptet och dess rader i en transaktion |
+| `20260926091500_home_management.sql` | FK medlem → profil, vakten `guard_last_owner`, RPC `leave_home` och `peek_invite` |
+| `20260926164217_fix_storage_cleanup_trigger_privileges.sql` | Städkötriggarna blir `security definer` — annars gick `delete from auth.users` inte |
+| `20261006174409_guard_delete_home.sql` | `delete_home` vägrar med andra medlemmar kvar; `redeem_invite` tar samma radlås |
 
 Enheter fungerar så här: ingrediensen bär ett **måttslag** (`dimension`), inte ett
 mått. Användaren väljer enhet per receptrad, och `amount_base` härleds av en

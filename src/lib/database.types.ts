@@ -66,6 +66,13 @@ export type Database = {
             referencedRelation: "homes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "home_members_user_id_profiles_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       home_settings: {
@@ -900,6 +907,15 @@ export type Database = {
       }
       is_home_member: { Args: { _home_id: string }; Returns: boolean }
       is_home_owner: { Args: { _home_id: string }; Returns: boolean }
+      leave_home: { Args: never; Returns: undefined }
+      peek_invite: {
+        Args: { _token: string }
+        Returns: {
+          home_id: string
+          home_name: string
+          member_count: number
+        }[]
+      }
       redeem_invite: { Args: { _token: string }; Returns: string }
       seed_standing_meals: {
         Args: { _home_id: string; _week_start: string }

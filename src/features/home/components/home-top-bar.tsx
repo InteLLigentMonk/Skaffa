@@ -2,6 +2,7 @@ import { useAuth } from "@/features/auth/contexts/auth-context";
 import { useAuthorizedUser } from "@/features/auth/contexts/authorized-user-context";
 import { StyledIonicons } from "@/utils/helpers";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import {
   Avatar as HeroAvatar,
   Menu,
@@ -87,14 +88,16 @@ export default function HomeTopBar({ scrolled }: { scrolled: boolean }) {
                 <Menu.ItemTitle>Kontoinställningar</Menu.ItemTitle>
               </View>
             </Menu.Item>
-            <Menu.Item>
+            {/* Att lämna hemmet ligger inne på manage-home, bakom en
+                bekräftelse — inte som en menypost ett felklick når. */}
+            <Menu.Item onPress={() => router.push("/manage-home")}>
               <View className="flex flex-row items-center gap-4">
                 <StyledIonicons
-                  name="log-out-outline"
+                  name="home-outline"
                   size={24}
                   className="text-foreground"
                 />
-                <Menu.ItemTitle>Lämna hemmet</Menu.ItemTitle>
+                <Menu.ItemTitle>Hantera hemmet</Menu.ItemTitle>
               </View>
             </Menu.Item>
             <Separator className="mx-2 my-2 opacity-75" />

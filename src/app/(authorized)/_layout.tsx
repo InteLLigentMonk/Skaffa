@@ -12,6 +12,10 @@ const TabsLayout = () => {
         screenOptions={{
           tabBarActiveTintColor: theme.primary,
           tabBarInactiveTintColor: theme.textSecondary,
+          // Annars står flikfältet kvar ovanpå tangentbordet och skjuter upp
+          // fälten på formulärskärmar inne i flikarna (Expos rekommendation
+          // för just det här fallet).
+          tabBarHideOnKeyboard: true,
           tabBarStyle: {
             backgroundColor: theme.surface,
             borderTopColor: theme.border,

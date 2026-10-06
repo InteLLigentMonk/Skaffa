@@ -1,6 +1,7 @@
 import { parseRecoveryLink } from "@/lib/auth-links";
 import { supabase } from "@/lib/supabase";
 import type { Session, User } from "@supabase/supabase-js";
+import { useQueryClient } from "@tanstack/react-query";
 import * as Linking from "expo-linking";
 import {
   createContext,
@@ -73,6 +74,7 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
   const [isRecoverySession, setIsRecoverySession] = useState(false);
   const [recoveryError, setRecoveryError] = useState<string | null>(null);
   const url = Linking.useLinkingURL();
+  const queryClient = useQueryClient();
 
   // Resolves to true only when the URL actually was a recovery link and the
   // session was applied. Any other deep link resolves to false so it never
@@ -117,13 +119,19 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     // calls inside it deadlocks the auth client.
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       applySession(session);
+      // Cachen håller det gamla hemmets privata data
+      //  — recept och egna ingredienser under nycklar utan användar-id.
+      //  Utan den här raden ser nästa användare som loggar in dem i 5 minuter (staleTime).
+      if (event === "SIGNED_OUT") {
+        queryClient.clear();
+      }
       setInitializing(false);
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [queryClient]);
 
   const login = async (email: string, password: string) => {
     setLoading(true);
