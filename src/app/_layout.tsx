@@ -1,4 +1,6 @@
 import { AuthProvider, useAuth } from "@/features/auth/contexts/auth-context";
+import { PendingInviteProvider } from "@/features/home/contexts/pending-invite-context";
+import { useHome } from "@/features/home/hooks/use-home";
 import { useNavigationTheme } from "@/hooks/use-navigation-theme";
 import {
   Fredoka_500Medium,
@@ -22,17 +24,33 @@ import "../global.css";
 // Separate component so it can read the context that RootLayout provides.
 const RootNavigator = () => {
   const { isAuthenticated, initializing, isRecoverySession } = useAuth();
-
+  const homeQuery = useHome();
   const theme = useTheme();
+  const [fontsLoaded, fontError] = useFonts({
+    Fredoka_500Medium,
+    Fredoka_600SemiBold,
+    Nunito_400Regular,
+    Nunito_500Medium,
+    Nunito_600SemiBold,
+    Nunito_700Bold,
+  });
+
+  const ready =
+    (fontsLoaded || fontError) &&
+    !initializing &&
+    !(isAuthenticated && homeQuery.isPending);
+
+  useEffect(() => {
+    if (ready) SplashScreen.hideAsync();
+  }, [ready]);
 
   useEffect(() => {
     SystemUI.setBackgroundColorAsync(theme.colors.background);
   }, [theme.colors.background]);
 
-  // Avoid flashing the login screen while the stored session is restored.
-  if (initializing) {
-    return null;
-  }
+  if (!ready) return null;
+
+  const hasHome = !!homeQuery.data;
 
   return (
     <Stack
@@ -40,7 +58,7 @@ const RootNavigator = () => {
         headerShown: false,
       }}
     >
-      <Stack.Protected guard={isAuthenticated && !isRecoverySession}>
+      <Stack.Protected guard={isAuthenticated && !isRecoverySession && hasHome}>
         <Stack.Screen name="(authorized)" options={{ headerShown: false }} />
         <Stack.Screen
           name="add-recipe"
@@ -49,6 +67,8 @@ const RootNavigator = () => {
             headerShown: false,
           }}
         />
+        <Stack.Screen name="create" />
+        <Stack.Screen name="new-product" />
       </Stack.Protected>
       {/* A recovery link takes over the entire app until a new password is
           set, so the user cannot tab away while the old one is still valid. */}
@@ -62,6 +82,14 @@ const RootNavigator = () => {
         <Stack.Screen
           name="(guest)"
           options={{ title: "Registrera dig", headerShown: false }}
+        />
+      </Stack.Protected>
+      <Stack.Protected
+        guard={isAuthenticated && !isRecoverySession && !hasHome}
+      >
+        <Stack.Screen
+          name="(no-home)"
+          options={{ title: "Skapa hem", headerShown: false }}
         />
       </Stack.Protected>
     </Stack>
@@ -78,29 +106,19 @@ const queryClient = new QueryClient({
 
 export default function RootLayout() {
   const navigationTheme = useNavigationTheme();
-  const [fontsLoaded, fontError] = useFonts({
-    Fredoka_500Medium,
-    Fredoka_600SemiBold,
-    Nunito_400Regular,
-    Nunito_500Medium,
-    Nunito_600SemiBold,
-    Nunito_700Bold,
-  });
-
-  useEffect(() => {
-    if (fontsLoaded || fontError) SplashScreen.hideAsync();
-  }, [fontsLoaded, fontError]);
-
-  if (!fontsLoaded && !fontError) return null;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
         <HeroUINativeProvider>
           <AuthProvider>
-            <ThemeProvider value={navigationTheme}>
-              <RootNavigator />
-            </ThemeProvider>
+            {/* Utanför RootNavigator så en parkerad inbjudan överlever att
+                guarden byter gren — både (guest) och (no-home) läser den. */}
+            <PendingInviteProvider>
+              <ThemeProvider value={navigationTheme}>
+                <RootNavigator />
+              </ThemeProvider>
+            </PendingInviteProvider>
           </AuthProvider>
         </HeroUINativeProvider>
       </QueryClientProvider>
