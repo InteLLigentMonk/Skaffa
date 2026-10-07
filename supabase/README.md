@@ -22,6 +22,8 @@ när mer än en person rör databasen.
 | `20260926091500_home_management.sql` | FK medlem → profil, vakten `guard_last_owner`, RPC `leave_home` och `peek_invite` |
 | `20260926164217_fix_storage_cleanup_trigger_privileges.sql` | Städkötriggarna blir `security definer` — annars gick `delete from auth.users` inte |
 | `20261006174409_guard_delete_home.sql` | `delete_home` vägrar med andra medlemmar kvar; `redeem_invite` tar samma radlås |
+| `20261007201059_search_recipes.sql` | Trigramindex på `recipes.name`, RPC `search_home_recipes` och `search_public_recipes` |
+| `20261007201233_search_recipes_threshold.sql` | Sökningens likhetströskel blir `word_similarity >= 0.3` i SQL i stället för en GUC som Supabase nekar |
 
 Enheter fungerar så här: ingrediensen bär ett **måttslag** (`dimension`), inte ett
 mått. Användaren väljer enhet per receptrad, och `amount_base` härleds av en

@@ -917,6 +917,56 @@ export type Database = {
         }[]
       }
       redeem_invite: { Args: { _token: string }; Returns: string }
+      search_home_recipes: {
+        Args: {
+          _diet?: Database["public"]["Enums"]["diet_class"]
+          _limit?: number
+          _offset?: number
+          _query?: string
+          _quick?: boolean
+        }
+        Returns: {
+          created_at: string | null
+          diet: Database["public"]["Enums"]["diet_class"] | null
+          home_id: string | null
+          id: string | null
+          image_path: string | null
+          is_quick: boolean | null
+          name: string | null
+          prep_minutes: number | null
+          tags: string[] | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "recipe_facets"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      search_public_recipes: {
+        Args: {
+          _diet?: Database["public"]["Enums"]["diet_class"]
+          _limit?: number
+          _offset?: number
+          _query?: string
+          _quick?: boolean
+        }
+        Returns: {
+          diet: Database["public"]["Enums"]["diet_class"] | null
+          id: string | null
+          image_path: string | null
+          is_quick: boolean | null
+          name: string | null
+          prep_minutes: number | null
+          published_at: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "public_recipe_facets"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       seed_standing_meals: {
         Args: { _home_id: string; _week_start: string }
         Returns: undefined
