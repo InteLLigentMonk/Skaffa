@@ -47,7 +47,14 @@ const Avatar = ({ initials }: { initials: string }) => {
   );
 };
 
-export default function HomeTopBar({ scrolled }: { scrolled: boolean }) {
+export default function HomeTopBar({
+  scrolled,
+  title,
+}: {
+  scrolled: boolean;
+  // Utan titel visas dagens datum (Hem-fliken).
+  title?: string;
+}) {
   const user = useAuthorizedUser();
   const auth = useAuth();
   const initials = getInitials(user.name);
@@ -57,7 +64,7 @@ export default function HomeTopBar({ scrolled }: { scrolled: boolean }) {
       className={`flex flex-row px-4 pb-2 items-center justify-between bg-background ${scrolled ? "shadow-md" : ""}`}
     >
       <Typography.Paragraph className="text-foreground">
-        {dateToday()}
+        {title ?? dateToday()}
       </Typography.Paragraph>
       <Menu>
         <Menu.Trigger>
