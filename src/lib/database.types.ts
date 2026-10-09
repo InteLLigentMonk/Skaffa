@@ -493,6 +493,7 @@ export type Database = {
       }
       recipes: {
         Row: {
+          copied_from: string | null
           created_at: string
           created_by: string | null
           description: string | null
@@ -506,6 +507,7 @@ export type Database = {
           tags: string[]
         }
         Insert: {
+          copied_from?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -519,6 +521,7 @@ export type Database = {
           tags?: string[]
         }
         Update: {
+          copied_from?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
@@ -532,6 +535,20 @@ export type Database = {
           tags?: string[]
         }
         Relationships: [
+          {
+            foreignKeyName: "recipes_copied_from_fkey"
+            columns: ["copied_from"]
+            isOneToOne: false
+            referencedRelation: "public_recipe_facets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recipes_copied_from_fkey"
+            columns: ["copied_from"]
+            isOneToOne: false
+            referencedRelation: "public_recipes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "recipes_home_id_fkey"
             columns: ["home_id"]
@@ -886,6 +903,7 @@ export type Database = {
         }[]
       }
       complete_storage_cleanup: { Args: { _ids: number[] }; Returns: undefined }
+      copy_public_recipe: { Args: { _public_id: string }; Returns: string }
       create_home: { Args: { _name: string }; Returns: string }
       create_recipe: {
         Args: { _ingredients: Json; _name: string; _servings: number }
@@ -893,6 +911,7 @@ export type Database = {
       }
       current_home_id: { Args: never; Returns: string }
       delete_home: { Args: { _home_id: string }; Returns: undefined }
+      duplicate_recipe: { Args: { _recipe_id: string }; Returns: string }
       enqueue_storage_delete: {
         Args: { _bucket: string; _path: string }
         Returns: undefined
@@ -915,6 +934,16 @@ export type Database = {
           home_name: string
           member_count: number
         }[]
+      }
+      plan_meal: {
+        Args: {
+          _date: string
+          _recipe_id: string
+          _replace?: boolean
+          _servings: number
+          _slot: Database["public"]["Enums"]["meal_slot"]
+        }
+        Returns: string
       }
       redeem_invite: { Args: { _token: string }; Returns: string }
       search_home_recipes: {
@@ -969,6 +998,10 @@ export type Database = {
       }
       seed_standing_meals: {
         Args: { _home_id: string; _week_start: string }
+        Returns: undefined
+      }
+      set_recipe_favorite: {
+        Args: { _favorite: boolean; _recipe_id: string }
         Returns: undefined
       }
       shares_home_with: { Args: { _user_id: string }; Returns: boolean }
