@@ -66,8 +66,10 @@ const WeekPicker = ({
         <StyledIonicons name="chevron-back" size={18} className="text-foreground" />
       </Button>
 
-      <Popover isOpen={isOpen} onOpenChange={setIsOpen}>
-        <Popover.Trigger className="flex-1">
+      {/* flex-1 på roten, inte på triggern: Popover renderar en egen View
+          runt triggern, och det är den som är radens flexbarn. */}
+      <Popover isOpen={isOpen} onOpenChange={setIsOpen} className="flex-1">
+        <Popover.Trigger>
           <View className="items-center">
             <View className="flex-row items-center gap-2">
               <Typography.Heading type="h6" weight="bold">
