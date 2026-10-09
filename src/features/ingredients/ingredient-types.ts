@@ -35,6 +35,24 @@ export const CATEGORY_COLORS: Record<IngredientCategory, string> = {
   other: "bg-cat-other/30",
 };
 
+// Full färg för små markörer (prickarna i receptets ingredienslista). Skrivna
+// ut i sin helhet: Uniwind hittar bara klassnamn som står som hela strängar.
+export const CATEGORY_DOT_COLORS: Record<IngredientCategory, string> = {
+  produce: "bg-cat-produce",
+  fruit: "bg-cat-fruit",
+  protein: "bg-cat-protein",
+  seafood: "bg-cat-seafood",
+  snacks: "bg-cat-snacks",
+  dairy: "bg-cat-dairy",
+  grains: "bg-cat-grains",
+  spices: "bg-cat-spices",
+  bakery: "bg-cat-bakery",
+  frozen: "bg-cat-frozen",
+  beverages: "bg-cat-beverages",
+  household: "bg-cat-household",
+  other: "bg-cat-other",
+};
+
 export const CATEGORY_EMOJI: Record<IngredientCategory, string> = {
   produce: "🥦",
   fruit: "🍎",

@@ -4,15 +4,9 @@ import { Image } from "expo-image";
 import { Card, PressableFeedback, Typography } from "heroui-native";
 import { View } from "react-native";
 import { withUniwind } from "uniwind";
-import { DietClass, RecipeCardData } from "../recipe-types";
+import { DIET_EMOJI, RecipeCardData } from "../recipe-types";
 
 const StyledImage = withUniwind(Image);
-
-const DIET_EMOJI: Record<DietClass, string> = {
-  kott: "🥩",
-  fisk: "🐟",
-  vegetariskt: "🥦",
-};
 
 type Props = {
   recipe: RecipeCardData;

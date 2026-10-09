@@ -152,8 +152,12 @@ const RecipeIndex = () => {
             <RecipeCard
               recipe={item}
               width={cardWidth}
-              // TODO: receptets detaljsida (nästa plan).
-              onPress={() => {}}
+              onPress={() =>
+                router.push({
+                  pathname: "/recipe/[id]",
+                  params: { id: item.id, scope },
+                })
+              }
               onLongPress={() => openMenu(item)}
             />
           )}
