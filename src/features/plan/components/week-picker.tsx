@@ -59,6 +59,7 @@ const WeekPicker = ({
         variant="tertiary"
         size="sm"
         isIconOnly
+        className="rounded-xl"
         isDisabled={index <= 0}
         onPress={() => onChange(weeks[index - 1])}
         accessibilityLabel="Föregående vecka"
@@ -170,6 +171,7 @@ const WeekPicker = ({
         variant="tertiary"
         size="sm"
         isIconOnly
+        className="rounded-xl"
         isDisabled={index === -1 || index >= weeks.length - 1}
         onPress={() => onChange(weeks[index + 1])}
         accessibilityLabel="Nästa vecka"

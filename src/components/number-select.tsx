@@ -15,11 +15,12 @@ type Props = {
 // ytorna (Surface secondary) den oftast ligger på.
 const NumberSelect = ({ value, onChange, min = 1, max = 20 }: Props) => {
   return (
-    <View className="flex-row items-center self-start rounded-2xl border border-border bg-background px-1">
+    <View className="flex-row items-center self-start rounded-2xl border border-border bg-background p-1">
       <Button
         variant="ghost"
         size="sm"
         isIconOnly
+        className="rounded-xl"
         isDisabled={value <= min}
         onPress={() => onChange(Math.max(min, value - 1))}
         accessibilityLabel="Minska"
@@ -38,6 +39,7 @@ const NumberSelect = ({ value, onChange, min = 1, max = 20 }: Props) => {
         variant="ghost"
         size="sm"
         isIconOnly
+        className="rounded-xl"
         isDisabled={value >= max}
         onPress={() => onChange(Math.min(max, value + 1))}
         accessibilityLabel="Öka"
