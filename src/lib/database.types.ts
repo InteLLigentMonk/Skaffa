@@ -905,10 +905,6 @@ export type Database = {
       complete_storage_cleanup: { Args: { _ids: number[] }; Returns: undefined }
       copy_public_recipe: { Args: { _public_id: string }; Returns: string }
       create_home: { Args: { _name: string }; Returns: string }
-      create_recipe: {
-        Args: { _ingredients: Json; _name: string; _servings: number }
-        Returns: string
-      }
       current_home_id: { Args: never; Returns: string }
       delete_home: { Args: { _home_id: string }; Returns: undefined }
       duplicate_recipe: { Args: { _recipe_id: string }; Returns: string }
@@ -946,6 +942,18 @@ export type Database = {
         Returns: string
       }
       redeem_invite: { Args: { _token: string }; Returns: string }
+      save_recipe: {
+        Args: {
+          _id: string
+          _image_path: string
+          _ingredients: Json
+          _name: string
+          _prep_minutes: number
+          _servings: number
+          _steps: Json
+        }
+        Returns: string
+      }
       search_home_recipes: {
         Args: {
           _diet?: Database["public"]["Enums"]["diet_class"]
@@ -1007,6 +1015,12 @@ export type Database = {
       shares_home_with: { Args: { _user_id: string }; Returns: boolean }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      sweep_orphan_recipe_images: {
+        Args: { _enqueue?: boolean; _min_age?: string }
+        Returns: {
+          path: string
+        }[]
+      }
       unit_dimension_of: {
         Args: { _unit: Database["public"]["Enums"]["unit_code"] }
         Returns: Database["public"]["Enums"]["unit_dimension"]

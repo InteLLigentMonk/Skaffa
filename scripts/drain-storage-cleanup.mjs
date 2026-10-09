@@ -58,6 +58,27 @@ const groupByBucket = (rows) => {
   return groups;
 };
 
+// Receptbilder som laddats upp men aldrig sparats på ett recept (appen
+// kraschade eller tappade nätet innan den hann städa själv). Svepet lägger dem
+// på kön, och loopen nedan raderar dem som vilka köade objekt som helst. I
+// dry-run listas de bara.
+const { data: orphans, error: sweepError } = await supabase.rpc(
+  "sweep_orphan_recipe_images",
+  { _enqueue: !dryRun }
+);
+
+if (sweepError) {
+  console.error("Kunde inte svepa efter föräldralösa bilder:", sweepError.message);
+  process.exit(1);
+}
+
+if (orphans.length) {
+  console.log(
+    `${dryRun ? "[dry-run] skulle köa" : "Köade"} ${orphans.length} föräldralösa receptbilder:`
+  );
+  for (const row of orphans) console.log(`  recipes/${row.path}`);
+}
+
 let removed = 0;
 let failed = 0;
 let rounds = 0;
