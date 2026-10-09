@@ -252,7 +252,7 @@ const PlanMealSheet = ({
                           variant={choice === "add" ? "primary" : "outline"}
                           onPress={() => setChoice("add")}
                         >
-                          <Button.Label>Lägg till som extra rätt</Button.Label>
+                          <Button.Label>Lägg till</Button.Label>
                         </Button>
                         <Button
                           size="sm"
