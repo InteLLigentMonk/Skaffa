@@ -35,7 +35,15 @@
           "imageWidth": 76
         }
       ],
-      "expo-image"
+      "expo-image",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Skaffa behöver tillgång till dina bilder för att du ska kunna lägga till en bild på receptet.",
+          "cameraPermission": "Skaffa behöver tillgång till kameran för att du ska kunna fota receptet.",
+          "microphonePermission": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

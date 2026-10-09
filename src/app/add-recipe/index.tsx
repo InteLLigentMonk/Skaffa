@@ -1,13 +1,22 @@
 import DashedButton from "@/components/dashed-button";
 import ModalScreen from "@/components/modal-screen";
 import NumberSelect from "@/components/number-select";
+import { useHome } from "@/features/home/hooks/use-home";
+import RecipeImageField from "@/features/recipes/components/recipe-image-field";
 import {
   AmountField,
   NameField,
+  PrepMinutesField,
   UnitField,
 } from "@/features/recipes/components/recipe-form-fields";
-import { useCreateRecipe } from "@/features/recipes/hooks/use-recipes";
-import { RecipeFormValues } from "@/features/recipes/recipe-types";
+import RecipeStepsField from "@/features/recipes/components/recipe-steps-field";
+import { useRecipeImage } from "@/features/recipes/hooks/use-recipe-image";
+import { useSaveRecipe } from "@/features/recipes/hooks/use-recipes";
+import {
+  deriveDiet,
+  DIET_EMOJI,
+  RecipeFormValues,
+} from "@/features/recipes/recipe-types";
 import { StyledIonicons } from "@/utils/helpers";
 import { useRouter } from "expo-router";
 import {
@@ -20,14 +29,25 @@ import {
   Typography,
 } from "heroui-native";
 import { Controller, useFieldArray, useFormContext } from "react-hook-form";
-import { ScrollView, View } from "react-native";
+import { View } from "react-native";
+import { ScrollViewContainer } from "react-native-reorderable-list";
+import { withUniwind } from "uniwind";
+
+// Stegens draglista är nästlad i formulärets scroll. Biblioteket behöver sin
+// egen ScrollView för att kunna skrolla formuläret när ett steg dras mot
+// kanten.
+const StyledScrollViewContainer = withUniwind(ScrollViewContainer);
+
 const AddRecipeScreen = () => {
   const router = useRouter();
-  const { mutate, isPending } = useCreateRecipe();
+  const { data: home } = useHome();
+  const { mutate, isPending } = useSaveRecipe();
   const {
     control,
+    getValues,
     handleSubmit,
     setError,
+    setValue,
     formState: { errors },
   } = useFormContext<RecipeFormValues>();
   const { fields, remove } = useFieldArray({
@@ -36,13 +56,64 @@ const AddRecipeScreen = () => {
     rules: { required: "Lägg till minst en ingrediens" },
   });
 
+  const image = useRecipeImage({
+    homeId: home?.id,
+    recipeId: getValues("id"),
+    onPathChange: (path) =>
+      setValue("imagePath", path, { shouldDirty: true }),
+  });
+
+  // Platshållaren visar den kostklass receptet kommer att få, härledd på
+  // samma sätt som recipe_facets.diet.
+  const diet = deriveDiet(fields);
+
+  const onSave = handleSubmit((values) => {
+    // En misslyckad bild sparas inte tyst bort: användaren ser den i rutan
+    // och ska välja själv mellan att försöka igen och att ta bort den.
+    if (image.status === "error") {
+      setError("root", {
+        message: "Bilden laddades inte upp. Försök igen eller ta bort den.",
+      });
+      return;
+    }
+
+    mutate(
+      {
+        id: values.id,
+        name: values.name,
+        servings: values.servings,
+        prepMinutes:
+          values.prepMinutes === "" ? null : Number(values.prepMinutes),
+        imagePath: values.imagePath,
+        ingredients: values.ingredients,
+        steps: values.steps
+          .map((step) => step.content.trim())
+          .filter((content) => content.length > 0),
+      },
+      {
+        onSuccess: () => {
+          image.commit(values.imagePath);
+          router.back();
+        },
+        onError: (error) => {
+          setError("root", {
+            message:
+              error.code === "P0001"
+                ? error.message
+                : "Kunde inte spara receptet, försök igen senare",
+          });
+        },
+      },
+    );
+  });
+
   return (
     <ModalScreen>
       <View className="flex flex-row items-center justify-between">
         <Typography.Heading type="h3">Nytt recept</Typography.Heading>
         <CloseButton onPress={() => router.back()} className="rounded-lg" />
       </View>
-      <ScrollView
+      <StyledScrollViewContainer
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         className="flex-1"
@@ -50,23 +121,26 @@ const AddRecipeScreen = () => {
       >
         <NameField />
 
-        <View className="flex flex-row items-center justify-between gap-4">
-          <View>
-            <Label>Portioner</Label>
-            <Controller
-              control={control}
-              name="servings"
-              render={({ field }) => (
-                <NumberSelect {...field} min={1} max={20} />
-              )}
-            />
+        <View className="flex flex-row items-start gap-4">
+          <View className="flex-1 gap-4">
+            <View>
+              <Label>Portioner</Label>
+              <Controller
+                control={control}
+                name="servings"
+                render={({ field }) => (
+                  <NumberSelect {...field} min={1} max={20} />
+                )}
+              />
+            </View>
+            <PrepMinutesField />
           </View>
-          <View className="flex-1">
+          <View>
             <Label>Bild</Label>
-            <Button variant="tertiary" className="grow rounded-2xl bg-field">
-              <StyledIonicons name="image-outline" size={20} />
-              <Typography.Paragraph>Lägg till</Typography.Paragraph>
-            </Button>
+            <RecipeImageField
+              image={image}
+              placeholderEmoji={diet ? DIET_EMOJI[diet] : "🍽️"}
+            />
           </View>
         </View>
         <View>
@@ -129,6 +203,7 @@ const AddRecipeScreen = () => {
             {errors.ingredients?.root?.message}
           </FieldError>
         </View>
+        <RecipeStepsField />
         <Surface variant="secondary" className="flex-row items-start gap-2">
           <StyledIonicons
             name="information-circle-outline"
@@ -140,40 +215,23 @@ const AddRecipeScreen = () => {
             steg krävs bara om du vill publicera receptet.
           </Typography.Paragraph>
         </Surface>
-      </ScrollView>
+      </StyledScrollViewContainer>
       <View className="gap-2">
         <FieldError isInvalid={!!errors.root}>
           {errors.root?.message}
         </FieldError>
-        <View className="flex flex-row items-center justify-between gap-4">
-          <Button variant="tertiary" className="rounded-2xl">
-            <Typography.Heading type="h6" weight="bold">
-              Steg
-            </Typography.Heading>
-          </Button>
-          <Button
-            isDisabled={isPending}
-            variant="primary"
-            onPress={handleSubmit((values) =>
-              mutate(values, {
-                onSuccess: () => router.back(),
-                onError: (error) => {
-                  setError("root", {
-                    message:
-                      error.code === "P0001"
-                        ? error.message
-                        : "Kunde inte spara receptet, försök igen senare",
-                  });
-                },
-              }),
-            )}
-            className="grow rounded-2xl"
-          >
-            <Typography.Heading type="h6" weight="bold" className="text-white">
-              Spara recept
-            </Typography.Heading>
-          </Button>
-        </View>
+        {/* Spärrad under uppladdning: image_path sätts först när filen
+            finns, så en sparning nu hade tappat bilden. */}
+        <Button
+          isDisabled={isPending || image.isUploading}
+          variant="primary"
+          onPress={onSave}
+          className="rounded-2xl"
+        >
+          <Typography.Heading type="h6" weight="bold" className="text-white">
+            {image.isUploading ? "Laddar upp bild…" : "Spara recept"}
+          </Typography.Heading>
+        </Button>
       </View>
     </ModalScreen>
   );

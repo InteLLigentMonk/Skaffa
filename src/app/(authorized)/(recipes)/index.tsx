@@ -56,6 +56,19 @@ const RecipeIndex = () => {
   } = useRecipeSearch(scope, { query, quick, diet });
   const recipes = data?.pages.flat() ?? [];
 
+  // Eget tillstånd i stället för isRefetching: det är sant även vid
+  // bakgrundsuppdateringar (t.ex. invalideringen efter ett sparat recept), och
+  // då hade spinnern dykt upp utan att användaren dragit i listan.
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const refresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   const openMenu = (recipe: RecipeCardData) => {
     setMenuRecipe(recipe);
     setIsMenuOpen(true);
@@ -165,6 +178,11 @@ const RecipeIndex = () => {
             if (hasNextPage && !isFetchingNextPage) fetchNextPage();
           }}
           onEndReachedThreshold={0.5}
+          // refetch() på en infinite query hämtar om alla sidor som redan är
+          // laddade. Bilderna laddas inte om: korten cachar på sökvägen, inte
+          // på den nya signerade URL:en.
+          onRefresh={refresh}
+          refreshing={isRefreshing}
           ListFooterComponent={
             isFetchingNextPage ? (
               <View className="items-center py-4">

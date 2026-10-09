@@ -1,4 +1,6 @@
 import { supabase } from "@/lib/supabase";
+import { randomUUID } from "expo-crypto";
+import { File } from "expo-file-system";
 import { parseAmount } from "@/lib/units";
 import {
   RecipeCardData,
@@ -10,23 +12,62 @@ import {
   RecipeScope,
 } from "./recipe-types";
 
-export type CreateRecipeInput = Pick<RecipeFormValues, "name" | "servings"> & {
+export type SaveRecipeInput = Pick<
+  RecipeFormValues,
+  "id" | "name" | "servings" | "imagePath"
+> & {
+  prepMinutes: number | null;
   ingredients: RecipeIngredientRow[];
+  // Redan trimmade och utan tomma; save_recipe filtrerar ändå en gång till.
+  steps: string[];
 };
 
-export async function createRecipe(recipe: CreateRecipeInput) {
-  const { data, error } = await supabase.rpc("create_recipe", {
+export async function saveRecipe(recipe: SaveRecipeInput) {
+  const { data, error } = await supabase.rpc("save_recipe", {
+    _id: recipe.id,
     _name: recipe.name,
     _servings: recipe.servings,
+    // De genererade typerna gör alla argument icke-null eftersom funktionen
+    // saknar defaults, men båda kolumnerna är nullable och funktionen tar null.
+    _prep_minutes: recipe.prepMinutes as number,
+    _image_path: recipe.imagePath as string,
     _ingredients: recipe.ingredients.map((row) => ({
       ingredient_id: row.ingredientId,
       display_amount: parseAmount(row.amount),
       display_unit: row.unit,
     })),
+    _steps: recipe.steps,
   });
 
   if (error) throw error;
   return data;
+}
+
+// Ny fil vid varje uppladdning: sökvägen är expo-images cachenyckel, så en
+// ny bild får aldrig återanvända en gammal sökväg.
+export const recipeImagePath = (homeId: string, recipeId: string) =>
+  `${homeId}/${recipeId}/${randomUUID()}.jpg`;
+
+export async function uploadRecipeImage(path: string, localUri: string) {
+  // supabase-js tar inte en fil-URI, så filen läses till en ArrayBuffer här.
+  // Inte via fetch(localUri): i Expo Go hittade fetch inte filen och svarade
+  // med texten "File not found", som laddades upp som om den vore bilden.
+  // File läser direkt från disk och kastar om filen saknas.
+  const body = await new File(localUri).arrayBuffer();
+  if (body.byteLength === 0) throw new Error("Bildfilen är tom");
+  const { error } = await supabase.storage
+    .from("recipes")
+    .upload(path, body, { contentType: "image/jpeg" });
+
+  if (error) throw error;
+}
+
+// Bara för filer som aldrig sparats på ett recept. En sparad bild städas av
+// triggern queue_recipe_image_cleanup när image_path byts eller raden raderas.
+export async function removeRecipeImages(paths: string[]) {
+  if (paths.length === 0) return;
+  const { error } = await supabase.storage.from("recipes").remove(paths);
+  if (error) throw error;
 }
 
 export const RECIPE_PAGE_SIZE = 20;
