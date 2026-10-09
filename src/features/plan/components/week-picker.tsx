@@ -72,7 +72,14 @@ const WeekPicker = ({
         <Popover.Trigger>
           <View className="items-center">
             <View className="flex-row items-center gap-2">
-              <Typography.Heading type="h6" weight="bold">
+              {/* Rubriken är Fredoka, chippet Nunito. Androids font padding
+                  skiljer sig mellan dem och flyttar texten i sin ruta, så
+                  chippet såg förskjutet ut trots items-center. */}
+              <Typography.Heading
+                type="h6"
+                weight="bold"
+                style={{ includeFontPadding: false, textAlignVertical: "center" }}
+              >
                 Vecka {isoWeek(value)}
               </Typography.Heading>
               {badge && (
