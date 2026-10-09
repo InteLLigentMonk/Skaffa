@@ -34,15 +34,22 @@ const RecipeActionsMenu = ({
   return (
     <>
       <Menu isOpen={isMenuOpen} onOpenChange={setIsMenuOpen}>
-        <Menu.Trigger
-          className="size-10 items-center justify-center rounded-full bg-background"
-          accessibilityLabel="Fler val"
-        >
-          <StyledIonicons
-            name="ellipsis-vertical"
-            size={20}
-            className="text-foreground"
-          />
+        {/* asChild: triggern blir samma Button som favorit- och
+            tillbaka-knappen, så storleken följer HeroUI i stället för en egen
+            size-klass som kan glida isär. */}
+        <Menu.Trigger asChild>
+          <Button
+            variant="tertiary"
+            isIconOnly
+            accessibilityLabel="Fler val"
+            className="rounded-full bg-background"
+          >
+            <StyledIonicons
+              name="ellipsis-vertical"
+              size={20}
+              className="text-foreground"
+            />
+          </Button>
         </Menu.Trigger>
         <Menu.Portal>
           <Menu.Overlay />
