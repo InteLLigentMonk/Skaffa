@@ -139,10 +139,12 @@ const RecipeView = ({ recipe }: { recipe: RecipeDetail }) => {
                 </Chip>
               )}
               {recipe.diet && (
+                // Emojin som eget element, inte i etikettens sträng: en
+                // emoji i samma Text som Nunito-texten tappade ordet efter
+                // några navigeringar, men emojin blev kvar.
                 <Chip size="sm" variant="soft" color="success">
-                  <Chip.Label>
-                    {DIET_EMOJI[recipe.diet]} {DIET_LABELS[recipe.diet]}
-                  </Chip.Label>
+                  <Emoji size={12}>{DIET_EMOJI[recipe.diet]}</Emoji>
+                  <Chip.Label>{DIET_LABELS[recipe.diet]}</Chip.Label>
                 </Chip>
               )}
               {otherTags.map((tag) => (
@@ -152,7 +154,8 @@ const RecipeView = ({ recipe }: { recipe: RecipeDetail }) => {
               ))}
               {isFavorite && (
                 <Chip size="sm" variant="soft" color="warning">
-                  <Chip.Label>⭐ Favorit</Chip.Label>
+                  <Emoji size={12}>⭐</Emoji>
+                  <Chip.Label>Favorit</Chip.Label>
                 </Chip>
               )}
             </View>
