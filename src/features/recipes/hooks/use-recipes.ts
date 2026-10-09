@@ -8,12 +8,12 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import {
-  createRecipe,
-  CreateRecipeInput,
   deleteRecipe,
   duplicateRecipe,
   getRecipe,
   RECIPE_PAGE_SIZE,
+  saveRecipe,
+  SaveRecipeInput,
   searchRecipes,
   setRecipeFavorite,
 } from "../api";
@@ -24,7 +24,7 @@ import {
   RecipeScope,
 } from "../recipe-types";
 
-// list ligger under prefixet ["recipes"], så useCreateRecipe:s invalidering
+// list ligger under prefixet ["recipes"], så useSaveRecipe:s invalidering
 // av recipeKeys.all når även rutnätet. Hemmets lista bär hem-id så cachen
 // inte delas mellan konton på samma enhet; receptbanken är densamma för alla.
 // detail bär scope: ett hemrecept och ett bankrecept är olika tabeller, och
@@ -63,11 +63,13 @@ export const useRecipe = (scope: RecipeScope, id: string) =>
     queryFn: () => getRecipe(scope, id),
   });
 
-export const useCreateRecipe = () => {
+// recipeKeys.all når även detaljen, så en framtida redigering av ett
+// befintligt recept syns direkt på detaljsidan.
+export const useSaveRecipe = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<string, PostgrestError, CreateRecipeInput>({
-    mutationFn: createRecipe,
+  return useMutation<string, PostgrestError, SaveRecipeInput>({
+    mutationFn: saveRecipe,
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: recipeKeys.all }),
   });

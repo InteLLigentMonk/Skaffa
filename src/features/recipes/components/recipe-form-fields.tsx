@@ -3,6 +3,7 @@ import { isValidAmount, UNIT_LABELS, UnitCode, unitsFor } from "@/lib/units";
 import {
   FieldError,
   Input,
+  InputGroup,
   Label,
   PressableFeedback,
   Select,
@@ -38,6 +39,44 @@ export const NameField = () => {
             autoCapitalize="sentences"
             placeholder="Pasta Bolognése"
           />
+          <FieldError>{error?.message}</FieldError>
+        </TextField>
+      )}
+    />
+  );
+};
+
+// Valfri. Tom betyder "ingen tid", och då matchar receptet aldrig
+// "Snabbt"-filtret (recipe_facets.is_quick).
+export const PrepMinutesField = () => {
+  const { control } = useFormContext<RecipeFormValues>();
+
+  return (
+    <Controller
+      control={control}
+      name="prepMinutes"
+      rules={{
+        validate: (value) =>
+          value === "" ||
+          /^[1-9]\d{0,2}$/.test(value) ||
+          "Ange tiden i hela minuter",
+      }}
+      render={({ fieldState: { error }, field }) => (
+        <TextField isInvalid={!!error}>
+          <Label>Tid</Label>
+          <InputGroup>
+            <InputGroup.Input
+              value={field.value}
+              onChangeText={field.onChange}
+              onBlur={field.onBlur}
+              keyboardType="number-pad"
+              maxLength={3}
+              placeholder="30"
+            />
+            <InputGroup.Suffix isDecorative>
+              <Typography.Paragraph color="muted">min</Typography.Paragraph>
+            </InputGroup.Suffix>
+          </InputGroup>
           <FieldError>{error?.message}</FieldError>
         </TextField>
       )}

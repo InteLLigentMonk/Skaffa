@@ -88,10 +88,18 @@ export type NewIngredientValues = {
 export type Ingredient = Tables<"ingredients">;
 
 // density_g_per_ml följer med för att receptformuläret ska veta om
-// ingrediensen får mätas i den andra dimensionen (se unitsFor).
+// ingrediensen får mätas i den andra dimensionen (se unitsFor). diet_tag
+// följer med så att formulärets bildplatshållare kan visa samma kostklass som
+// receptet får när det sparats (recipe_facets.diet).
 export type PickerIngredient = Pick<
   Ingredient,
-  "id" | "home_id" | "name" | "category" | "dimension" | "density_g_per_ml"
+  | "id"
+  | "home_id"
+  | "name"
+  | "category"
+  | "dimension"
+  | "density_g_per_ml"
+  | "diet_tag"
 >;
 
 export type IngredientsPickerProps = {

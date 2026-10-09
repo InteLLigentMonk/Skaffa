@@ -36,6 +36,7 @@ const ChooseIngredients = () => {
               unit: DEFAULT_UNIT[ingredient.dimension],
               dimension: ingredient.dimension,
               density: ingredient.density_g_per_ml,
+              dietTag: ingredient.diet_tag,
             },
           ],
       { shouldDirty: true, shouldValidate: true },

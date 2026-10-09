@@ -3,11 +3,21 @@ import { IngredientCategory } from "@/features/ingredients/ingredient-types";
 import { UnitCode, UnitDimension } from "@/lib/units";
 
 export type RecipeFormValues = {
+  // Genereras i klienten när formuläret öppnas, så att bildens sökväg
+  // ({home_id}/{recipe_id}/…) är känd före första sparningen. Gör också
+  // sparningen idempotent — se save_recipe.
+  id: string;
   name: string;
   servings: number;
+  // Sträng i formuläret, tolkas vid sparning. Tom = ingen tid angiven.
+  prepMinutes: string;
   ingredients: RecipeIngredientRow[];
-  imageUri?: string;
+  // Objekt, inte strängar: useFieldArray kräver det.
+  steps: RecipeStepValue[];
+  imagePath: string | null;
 };
+
+export type RecipeStepValue = { content: string };
 
 export type RecipeIngredientRow = {
   ingredientId: string;
@@ -16,6 +26,7 @@ export type RecipeIngredientRow = {
   name: string;
   dimension: UnitDimension;
   density: number | null;
+  dietTag: DietClass | null;
   unit: UnitCode;
 };
 
@@ -31,6 +42,17 @@ export const DIET_EMOJI: Record<DietClass, string> = {
   kott: "🥩",
   fisk: "🐟",
   vegetariskt: "🥦",
+};
+
+// Samma regel som recipe_facets.diet: kött före fisk, annars vegetariskt.
+// Används bara för platshållaren innan receptet finns; därefter är vyn facit.
+export const deriveDiet = (
+  ingredients: Pick<RecipeIngredientRow, "dietTag">[],
+): DietClass | null => {
+  if (ingredients.length === 0) return null;
+  if (ingredients.some((row) => row.dietTag === "kott")) return "kott";
+  if (ingredients.some((row) => row.dietTag === "fisk")) return "fisk";
+  return "vegetariskt";
 };
 
 // "home" = hemmets egna recept, "explore" = den offentliga receptbanken.

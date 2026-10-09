@@ -5,7 +5,7 @@ import { IngredientCategory, PickerIngredient } from "./ingredient-types";
 export const listIngredients = async (): Promise<PickerIngredient[]> => {
   const { data, error } = await supabase
     .from("ingredients")
-    .select("id, home_id, name, category, dimension, density_g_per_ml")
+    .select("id, home_id, name, category, dimension, density_g_per_ml, diet_tag")
     .order("name");
 
   if (error) throw error;
@@ -47,7 +47,7 @@ export const createIngredient = async ({
       dimension,
       diet_tag: dietTag,
     })
-    .select("id, home_id, name, category, dimension, density_g_per_ml")
+    .select("id, home_id, name, category, dimension, density_g_per_ml, diet_tag")
     .single();
 
   if (error) throw error;
