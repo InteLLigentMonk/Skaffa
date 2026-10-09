@@ -2,6 +2,8 @@ import { supabase } from "@/lib/supabase";
 import { parseAmount } from "@/lib/units";
 import {
   RecipeCardData,
+  RecipeDetail,
+  RecipeDetailIngredient,
   RecipeFilters,
   RecipeFormValues,
   RecipeIngredientRow,
@@ -114,4 +116,142 @@ async function resolveImageUrls(
     if (entry.path && entry.signedUrl) urls.set(entry.path, entry.signedUrl);
   }
   return urls;
+}
+
+// Ingrediens- och stegraderna har samma form i båda scopen, bara tabellnamnen
+// skiljer. Inbäddningen ger ingredients som ett objekt (FK:n pekar på en rad).
+type DetailIngredientRow = {
+  id: string;
+  display_amount: number;
+  display_unit: RecipeDetailIngredient["displayUnit"];
+  ingredients: { name: string; category: RecipeDetailIngredient["category"] };
+};
+
+const mapIngredients = (rows: DetailIngredientRow[]) =>
+  rows
+    .map((row) => ({
+      id: row.id,
+      name: row.ingredients.name,
+      category: row.ingredients.category,
+      displayAmount: row.display_amount,
+      displayUnit: row.display_unit,
+    }))
+    // Raderna har ingen egen ordning; namnordning är åtminstone stabil mellan
+    // refetchar.
+    .sort((a, b) => a.name.localeCompare(b.name, "sv"));
+
+export async function getRecipe(
+  scope: RecipeScope,
+  id: string,
+): Promise<RecipeDetail> {
+  if (scope === "home") {
+    const [recipe, facets] = await Promise.all([
+      supabase
+        .from("recipes")
+        .select(
+          `id, name, servings, prep_minutes, image_path, tags,
+           recipe_ingredients(id, display_amount, display_unit, ingredients(name, category)),
+           recipe_steps(position, content)`,
+        )
+        .eq("id", id)
+        .order("position", { referencedTable: "recipe_steps" })
+        .single(),
+      supabase.from("recipe_facets").select("diet").eq("id", id).maybeSingle(),
+    ]);
+
+    if (recipe.error) throw recipe.error;
+    if (facets.error) throw facets.error;
+
+    const { data } = recipe;
+    const imageUrls = await resolveImageUrls(
+      scope,
+      data.image_path ? [data.image_path] : [],
+    );
+
+    return {
+      id: data.id,
+      scope,
+      name: data.name,
+      servings: data.servings,
+      prepMinutes: data.prep_minutes,
+      diet: facets.data?.diet ?? null,
+      tags: data.tags,
+      imagePath: data.image_path,
+      imageUrl: data.image_path
+        ? (imageUrls.get(data.image_path) ?? null)
+        : null,
+      ingredients: mapIngredients(data.recipe_ingredients),
+      steps: data.recipe_steps,
+    };
+  }
+
+  const [recipe, facets] = await Promise.all([
+    supabase
+      .from("public_recipes")
+      .select(
+        `id, name, servings, prep_minutes, image_path,
+         public_recipe_ingredients(id, display_amount, display_unit, ingredients(name, category)),
+         public_recipe_steps(position, content)`,
+      )
+      .eq("id", id)
+      .order("position", { referencedTable: "public_recipe_steps" })
+      .single(),
+    supabase
+      .from("public_recipe_facets")
+      .select("diet")
+      .eq("id", id)
+      .maybeSingle(),
+  ]);
+
+  if (recipe.error) throw recipe.error;
+  if (facets.error) throw facets.error;
+
+  const { data } = recipe;
+  const imageUrls = await resolveImageUrls(scope, [data.image_path]);
+
+  return {
+    id: data.id,
+    scope,
+    name: data.name,
+    servings: data.servings,
+    prepMinutes: data.prep_minutes,
+    diet: facets.data?.diet ?? null,
+    tags: [],
+    imagePath: data.image_path,
+    imageUrl: imageUrls.get(data.image_path) ?? null,
+    ingredients: mapIngredients(data.public_recipe_ingredients),
+    steps: data.public_recipe_steps,
+  };
+}
+
+// Bilden städas av triggern queue_recipe_image_cleanup, och planerade
+// måltider med receptet försvinner via on delete cascade.
+export async function deleteRecipe(id: string) {
+  const { error } = await supabase.from("recipes").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function duplicateRecipe(id: string) {
+  const { data, error } = await supabase.rpc("duplicate_recipe", {
+    _recipe_id: id,
+  });
+  if (error) throw error;
+  return data;
+}
+
+/** Hemmets kopia av ett bankrecept. Skapas bara första gången. */
+export async function copyPublicRecipe(publicId: string) {
+  const { data, error } = await supabase.rpc("copy_public_recipe", {
+    _public_id: publicId,
+  });
+  if (error) throw error;
+  return data;
+}
+
+export async function setRecipeFavorite(id: string, favorite: boolean) {
+  const { error } = await supabase.rpc("set_recipe_favorite", {
+    _recipe_id: id,
+    _favorite: favorite,
+  });
+  if (error) throw error;
 }

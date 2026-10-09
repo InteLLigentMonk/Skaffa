@@ -1,26 +1,41 @@
 import { useHome } from "@/features/home/hooks/use-home";
+import { planKeys } from "@/features/plan/hooks/use-plan";
 import { PostgrestError } from "@supabase/supabase-js";
 import {
   useInfiniteQuery,
   useMutation,
+  useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
 import {
   createRecipe,
   CreateRecipeInput,
+  deleteRecipe,
+  duplicateRecipe,
+  getRecipe,
   RECIPE_PAGE_SIZE,
   searchRecipes,
+  setRecipeFavorite,
 } from "../api";
-import { RecipeFilters, RecipeScope } from "../recipe-types";
+import {
+  FAVORITE_TAG,
+  RecipeDetail,
+  RecipeFilters,
+  RecipeScope,
+} from "../recipe-types";
 
 // list ligger under prefixet ["recipes"], så useCreateRecipe:s invalidering
 // av recipeKeys.all når även rutnätet. Hemmets lista bär hem-id så cachen
 // inte delas mellan konton på samma enhet; receptbanken är densamma för alla.
+// detail bär scope: ett hemrecept och ett bankrecept är olika tabeller, och
+// id:n får aldrig dela cachepost.
 export const recipeKeys = {
   all: ["recipes"] as const,
+  lists: ["recipes", "list"] as const,
   list: (scope: RecipeScope, filters: RecipeFilters, homeId?: string) =>
     ["recipes", "list", scope, homeId ?? null, filters] as const,
-  detail: (id: string) => ["recipes", id] as const,
+  detail: (scope: RecipeScope, id: string) =>
+    ["recipes", "detail", scope, id] as const,
 };
 
 export const useRecipeSearch = (scope: RecipeScope, filters: RecipeFilters) => {
@@ -42,6 +57,12 @@ export const useRecipeSearch = (scope: RecipeScope, filters: RecipeFilters) => {
   });
 };
 
+export const useRecipe = (scope: RecipeScope, id: string) =>
+  useQuery({
+    queryKey: recipeKeys.detail(scope, id),
+    queryFn: () => getRecipe(scope, id),
+  });
+
 export const useCreateRecipe = () => {
   const queryClient = useQueryClient();
 
@@ -49,5 +70,74 @@ export const useCreateRecipe = () => {
     mutationFn: createRecipe,
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: recipeKeys.all }),
+  });
+};
+
+// Bara listorna och planen invalideras, inte detaljen: sidan som raderade
+// receptet är fortfarande monterad under tillbaka-animationen, och en refetch
+// av ett recept som inte finns hade blinkat fram felvyn.
+export const useDeleteRecipe = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, PostgrestError, string>({
+    mutationFn: deleteRecipe,
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: recipeKeys.lists }),
+        queryClient.invalidateQueries({ queryKey: planKeys.all }),
+      ]),
+  });
+};
+
+export const useDuplicateRecipe = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<string, PostgrestError, string>({
+    mutationFn: duplicateRecipe,
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: recipeKeys.lists }),
+  });
+};
+
+type FavoriteInput = { id: string; favorite: boolean };
+
+// Optimistisk: hjärtat ska slå om direkt, inte efter en rundresa. Går
+// skrivningen fel rullas cachen tillbaka.
+export const useToggleFavorite = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    void,
+    PostgrestError,
+    FavoriteInput,
+    { previous?: RecipeDetail }
+  >({
+    mutationFn: ({ id, favorite }) => setRecipeFavorite(id, favorite),
+    onMutate: async ({ id, favorite }) => {
+      const key = recipeKeys.detail("home", id);
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<RecipeDetail>(key);
+
+      if (previous) {
+        const tags = previous.tags.filter((tag) => tag !== FAVORITE_TAG);
+        queryClient.setQueryData<RecipeDetail>(key, {
+          ...previous,
+          tags: favorite ? [...tags, FAVORITE_TAG] : tags,
+        });
+      }
+      return { previous };
+    },
+    onError: (_error, { id }, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(
+          recipeKeys.detail("home", id),
+          context.previous,
+        );
+      }
+    },
+    onSettled: (_data, _error, { id }) =>
+      queryClient.invalidateQueries({
+        queryKey: recipeKeys.detail("home", id),
+      }),
   });
 };
