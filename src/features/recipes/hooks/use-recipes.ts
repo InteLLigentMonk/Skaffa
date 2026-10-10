@@ -8,6 +8,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import {
+  copyPublicRecipe,
   deleteRecipe,
   duplicateRecipe,
   getRecipe,
@@ -151,9 +152,25 @@ export const useToggleFavorite = () => {
         );
       }
     },
+    // Listorna också: kortens meny läser favoritstatus därifrån.
     onSettled: (_data, _error, { id }) =>
-      queryClient.invalidateQueries({
-        queryKey: recipeKeys.detail("home", id),
-      }),
+      Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: recipeKeys.detail("home", id),
+        }),
+        queryClient.invalidateQueries({ queryKey: recipeKeys.lists }),
+      ]),
+  });
+};
+
+// Hemmets kopia av ett bankrecept. copy_public_recipe återanvänder en
+// befintlig kopia, så att spara samma recept två gånger ger ingen dubblett.
+export const useCopyPublicRecipe = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<string, PostgrestError, string>({
+    mutationFn: copyPublicRecipe,
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: recipeKeys.lists }),
   });
 };

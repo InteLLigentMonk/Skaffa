@@ -1,10 +1,10 @@
 import Fab from "@/components/fab";
 import SearchBar from "@/components/search-bar";
 import HomeTopBar from "@/features/home/components/home-top-bar";
-import RecipeCard from "@/features/recipes/components/recipe-card";
 import RecipeContextMenu from "@/features/recipes/components/recipe-context-menu";
 import RecipeEmptyState from "@/features/recipes/components/recipe-empty-state";
 import RecipeFilterPills from "@/features/recipes/components/recipe-filter-pills";
+import RecipeListPlanSheet from "@/features/recipes/components/recipe-list-plan-sheet";
 import { useRecipeSearch } from "@/features/recipes/hooks/use-recipes";
 import {
   DietClass,
@@ -41,8 +41,14 @@ const RecipeIndex = () => {
   const [quick, setQuick] = useState(false);
   const [diet, setDiet] = useState<DietClass | null>(null);
 
-  const [menuRecipe, setMenuRecipe] = useState<RecipeCardData | null>(null);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  // Scope sparas med receptet: byter man flik medan arket är öppet gäller det
+  // fortfarande receptet man valde. isPlanOpen hålls separat så att arket kan
+  // animeras ut innan det avmonteras.
+  const [planTarget, setPlanTarget] = useState<{
+    recipe: RecipeCardData;
+    scope: RecipeScope;
+  } | null>(null);
+  const [isPlanOpen, setIsPlanOpen] = useState(false);
 
   const query = useDebouncedValue(searchTerm.trim());
   const {
@@ -69,9 +75,9 @@ const RecipeIndex = () => {
     }
   };
 
-  const openMenu = (recipe: RecipeCardData) => {
-    setMenuRecipe(recipe);
-    setIsMenuOpen(true);
+  const openPlan = (recipe: RecipeCardData) => {
+    setPlanTarget({ recipe, scope });
+    setIsPlanOpen(true);
   };
 
   const createRecipe = (name?: string) =>
@@ -162,16 +168,11 @@ const RecipeIndex = () => {
           columnWrapperClassName="gap-3"
           contentContainerClassName="grow gap-3 px-4 pb-28"
           renderItem={({ item }) => (
-            <RecipeCard
+            <RecipeContextMenu
               recipe={item}
+              scope={scope}
               width={cardWidth}
-              onPress={() =>
-                router.push({
-                  pathname: "/recipe/[id]",
-                  params: { id: item.id, scope },
-                })
-              }
-              onLongPress={() => openMenu(item)}
+              onPlan={() => openPlan(item)}
             />
           )}
           onEndReached={() => {
@@ -208,12 +209,16 @@ const RecipeIndex = () => {
 
       <Fab onPress={() => createRecipe()} />
 
-      <RecipeContextMenu
-        recipe={menuRecipe}
-        scope={scope}
-        isOpen={isMenuOpen}
-        onOpenChange={setIsMenuOpen}
-      />
+      {planTarget && (
+        <RecipeListPlanSheet
+          // Nytt recept = nytt ark, så portionerna börjar om.
+          key={`${planTarget.scope}:${planTarget.recipe.id}`}
+          recipe={planTarget.recipe}
+          scope={planTarget.scope}
+          isOpen={isPlanOpen}
+          onClose={() => setIsPlanOpen(false)}
+        />
+      )}
     </View>
   );
 };

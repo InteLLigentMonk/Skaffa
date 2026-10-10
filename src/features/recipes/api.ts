@@ -3,6 +3,7 @@ import { randomUUID } from "expo-crypto";
 import { File } from "expo-file-system";
 import { parseAmount } from "@/lib/units";
 import {
+  FAVORITE_TAG,
   RecipeCardData,
   RecipeDetail,
   RecipeDetailIngredient,
@@ -84,6 +85,8 @@ type FacetRow = {
   image_path: string | null;
   prep_minutes: number | null;
   diet: RecipeCardData["diet"];
+  // Finns bara i hemmets vy.
+  tags?: string[] | null;
 };
 
 export async function searchRecipes(
@@ -125,6 +128,7 @@ export async function searchRecipes(
     imageUrl: row.image_path ? (imageUrls.get(row.image_path) ?? null) : null,
     prepMinutes: row.prep_minutes,
     diet: row.diet,
+    isFavorite: row.tags?.includes(FAVORITE_TAG) ?? false,
   }));
 }
 

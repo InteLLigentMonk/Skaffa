@@ -1,6 +1,5 @@
 import { Emoji } from "@/components/emoji";
 import { StyledIonicons } from "@/utils/helpers";
-import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import {
   Menu,
@@ -8,10 +7,11 @@ import {
   Spinner,
   Typography,
 } from "heroui-native";
-import { ComponentProps, useState } from "react";
+import { useState } from "react";
 import { View } from "react-native";
 import { withUniwind } from "uniwind";
 import { RecipeImageSource, UseRecipeImage } from "../hooks/use-recipe-image";
+import MenuRow from "./recipe-menu-row";
 
 const StyledImage = withUniwind(Image);
 
@@ -144,28 +144,5 @@ const RecipeImageField = ({ image, placeholderEmoji }: Props) => {
     </Menu>
   );
 };
-
-const MenuRow = ({
-  icon,
-  title,
-  variant = "default",
-  onPress,
-}: {
-  icon: ComponentProps<typeof Ionicons>["name"];
-  title: string;
-  variant?: "default" | "danger";
-  onPress: () => void;
-}) => (
-  <Menu.Item variant={variant} onPress={onPress}>
-    <View className="flex flex-row items-center gap-3">
-      <StyledIonicons
-        name={icon}
-        size={20}
-        className={variant === "danger" ? "text-danger" : "text-foreground"}
-      />
-      <Menu.ItemTitle>{title}</Menu.ItemTitle>
-    </View>
-  </Menu.Item>
-);
 
 export default RecipeImageField;
