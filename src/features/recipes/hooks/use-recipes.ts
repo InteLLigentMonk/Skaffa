@@ -8,9 +8,11 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import {
+  copyPublicRecipe,
   deleteRecipe,
   duplicateRecipe,
   getRecipe,
+  getRecipeForEdit,
   RECIPE_PAGE_SIZE,
   saveRecipe,
   SaveRecipeInput,
@@ -36,6 +38,7 @@ export const recipeKeys = {
     ["recipes", "list", scope, homeId ?? null, filters] as const,
   detail: (scope: RecipeScope, id: string) =>
     ["recipes", "detail", scope, id] as const,
+  form: (id: string) => ["recipes", "form", id] as const,
 };
 
 export const useRecipeSearch = (scope: RecipeScope, filters: RecipeFilters) => {
@@ -63,8 +66,20 @@ export const useRecipe = (scope: RecipeScope, id: string) =>
     queryFn: () => getRecipe(scope, id),
   });
 
-// recipeKeys.all når även detaljen, så en framtida redigering av ett
-// befintligt recept syns direkt på detaljsidan.
+// Ingen cache mellan två öppningar av formuläret: useForm läser värdena en
+// gång, så det som visas måste vara färskt just då — någon annan i hemmet kan
+// ha ändrat receptet under de fem minuter som annars räknas som färska.
+export const useRecipeForEdit = (id: string | undefined) =>
+  useQuery({
+    queryKey: recipeKeys.form(id ?? ""),
+    queryFn: () => getRecipeForEdit(id!),
+    enabled: !!id,
+    staleTime: 0,
+    gcTime: 0,
+  });
+
+// recipeKeys.all når även detaljen, så en redigering av ett befintligt
+// recept syns direkt på detaljsidan.
 export const useSaveRecipe = () => {
   const queryClient = useQueryClient();
 
@@ -137,9 +152,25 @@ export const useToggleFavorite = () => {
         );
       }
     },
+    // Listorna också: kortens meny läser favoritstatus därifrån.
     onSettled: (_data, _error, { id }) =>
-      queryClient.invalidateQueries({
-        queryKey: recipeKeys.detail("home", id),
-      }),
+      Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: recipeKeys.detail("home", id),
+        }),
+        queryClient.invalidateQueries({ queryKey: recipeKeys.lists }),
+      ]),
+  });
+};
+
+// Hemmets kopia av ett bankrecept. copy_public_recipe återanvänder en
+// befintlig kopia, så att spara samma recept två gånger ger ingen dubblett.
+export const useCopyPublicRecipe = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<string, PostgrestError, string>({
+    mutationFn: copyPublicRecipe,
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: recipeKeys.lists }),
   });
 };

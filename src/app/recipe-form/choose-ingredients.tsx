@@ -72,7 +72,7 @@ const ChooseIngredients = () => {
         onBack={() => router.back()}
         onCreateNew={(name) => {
           router.push({
-            pathname: "/add-recipe/new-ingredient",
+            pathname: "/recipe-form/new-ingredient",
             params: { name },
           });
         }}

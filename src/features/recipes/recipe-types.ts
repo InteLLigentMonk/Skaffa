@@ -19,6 +19,13 @@ export type RecipeFormValues = {
 
 export type RecipeStepValue = { content: string };
 
+// Ett befintligt recept i formulärets form. Bildens URL ligger bredvid
+// värdena: den sparas aldrig, den behövs bara för förhandsvisningen.
+export type RecipeFormDraft = {
+  values: RecipeFormValues;
+  imageUrl: string | null;
+};
+
 export type RecipeIngredientRow = {
   ingredientId: string;
   homeId: string | null;
@@ -73,6 +80,8 @@ export type RecipeCardData = {
   imageUrl: string | null;
   prepMinutes: number | null;
   diet: DietClass | null;
+  // För kortets meny. Alltid false i receptbanken, som saknar taggar.
+  isFavorite: boolean;
 };
 
 // Favorit är en tagg bland de andra (se set_recipe_favorite i

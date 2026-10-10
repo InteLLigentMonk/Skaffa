@@ -1,6 +1,6 @@
 import DashedButton from "@/components/dashed-button";
 import { StyledIonicons } from "@/utils/helpers";
-import { Label, Typography } from "heroui-native";
+import { Typography } from "heroui-native";
 import { useEffect, useRef } from "react";
 import { useFieldArray, useFormContext } from "react-hook-form";
 import { TextInput, View } from "react-native";
@@ -74,8 +74,11 @@ const RecipeStepsField = () => {
   };
 
   return (
-    <View>
-      <Label>Steg</Label>
+    <View className="gap-3">
+      {/* Samma rubrik som detaljsidan, så formuläret läses som receptet. */}
+      <Typography.Heading type="h5" weight="bold">
+        Gör så här
+      </Typography.Heading>
       <NestedReorderableList
         data={fields}
         // Nyckeln är field.id, aldrig index: index byter rad vid varje drag.
@@ -104,7 +107,7 @@ const RecipeStepsField = () => {
       <DashedButton
         onPress={addStep}
         color="green"
-        className="mt-2 flex flex-row items-center justify-center gap-2"
+        className="flex flex-row items-center justify-center gap-2"
       >
         <StyledIonicons name="add-outline" size={20} className="text-accent" />
         <Typography.Heading type="h5" weight="bold" className="text-accent">

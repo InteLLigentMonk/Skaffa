@@ -1,5 +1,6 @@
 import { Emoji } from "@/components/emoji";
 import NumberSelect from "@/components/number-select";
+import RoundButton from "@/components/round-button";
 import PlanMealSheet from "@/features/plan/components/plan-meal-sheet";
 import RecipeActionsMenu from "@/features/recipes/components/recipe-actions-menu";
 import RecipeIngredientList from "@/features/recipes/components/recipe-ingredient-list";
@@ -223,6 +224,12 @@ const RecipeView = ({ recipe }: { recipe: RecipeDetail }) => {
               isDuplicating={duplicate.isPending}
               isDeleting={remove.isPending}
               error={errorText(remove.error, "Kunde inte ta bort receptet")}
+              onEdit={() =>
+                router.push({
+                  pathname: "/recipe-form",
+                  params: { id: recipe.id },
+                })
+              }
               onDuplicate={() =>
                 duplicate.mutate(recipe.id, {
                   onSuccess: (id) =>
@@ -263,28 +270,6 @@ const RecipeView = ({ recipe }: { recipe: RecipeDetail }) => {
     </View>
   );
 };
-
-const RoundButton = ({
-  icon,
-  label,
-  onPress,
-  iconClassName = "text-foreground",
-}: {
-  icon: React.ComponentProps<typeof StyledIonicons>["name"];
-  label: string;
-  onPress: () => void;
-  iconClassName?: string;
-}) => (
-  <Button
-    variant="tertiary"
-    isIconOnly
-    onPress={onPress}
-    accessibilityLabel={label}
-    className="rounded-full bg-background"
-  >
-    <StyledIonicons name={icon} size={20} className={iconClassName} />
-  </Button>
-);
 
 const capitalize = (text: string) =>
   text.charAt(0).toUpperCase() + text.slice(1);
