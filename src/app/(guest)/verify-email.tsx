@@ -3,12 +3,12 @@ import { useResendCooldown } from "@/hooks/use-resend-cooldown";
 import { isAuthError } from "@supabase/supabase-js";
 import { Redirect, useLocalSearchParams } from "expo-router";
 import {
-    FieldError,
-    InputOTP,
-    LinkButton,
-    REGEXP_ONLY_DIGITS,
-    Typography,
-    type InputOTPRef,
+  FieldError,
+  InputOTP,
+  LinkButton,
+  REGEXP_ONLY_DIGITS,
+  Typography,
+  type InputOTPRef,
 } from "heroui-native";
 import { useRef } from "react";
 import { Controller, SubmitHandler, useForm } from "react-hook-form";
@@ -77,13 +77,11 @@ const VerifyEmail = () => {
     }
   };
 
-  const submit = handleSubmit(onSubmit);
-
   const onResend = async () => {
     try {
       await resendSignupVerification(emailToVerify);
       restart();
-    } catch (error) {
+    } catch {
       restart(); // spärra även vid fel — servern har ändå räknat försöket
       setError("root", { message: "Kunde inte skicka en ny kod." });
     }
@@ -130,7 +128,7 @@ const VerifyEmail = () => {
                 onChange={field.onChange}
                 onComplete={() => {
                   if (isSubmitting || loading) return;
-                  submit();
+                  handleSubmit(onSubmit)();
                 }}
               >
                 <InputOTP.Group>
