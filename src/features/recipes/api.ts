@@ -7,6 +7,7 @@ import {
   RecipeDetail,
   RecipeDetailIngredient,
   RecipeFilters,
+  RecipeFormDraft,
   RecipeFormValues,
   RecipeIngredientRow,
   RecipeScope,
@@ -262,6 +263,60 @@ export async function getRecipe(
     imageUrl: imageUrls.get(data.image_path) ?? null,
     ingredients: mapIngredients(data.public_recipe_ingredients),
     steps: data.public_recipe_steps,
+  };
+}
+
+// Redigering gäller bara hemmets recept. Detaljvyns form räcker inte här:
+// formuläret behöver ingrediensens måttslag, densitet och kostklass för
+// enhetsväljaren och bildplatshållaren, precis som när raden valdes i
+// choose-ingredients.
+export async function getRecipeForEdit(id: string): Promise<RecipeFormDraft> {
+  const { data, error } = await supabase
+    .from("recipes")
+    .select(
+      `id, name, servings, prep_minutes, image_path,
+       recipe_ingredients(display_amount, display_unit,
+         ingredients(id, home_id, name, dimension, density_g_per_ml, diet_tag)),
+       recipe_steps(position, content)`,
+    )
+    .eq("id", id)
+    .order("position", { referencedTable: "recipe_steps" })
+    .single();
+
+  if (error) throw error;
+
+  const imageUrls = await resolveImageUrls(
+    "home",
+    data.image_path ? [data.image_path] : [],
+  );
+
+  return {
+    values: {
+      id: data.id,
+      name: data.name,
+      servings: data.servings,
+      prepMinutes: data.prep_minutes === null ? "" : String(data.prep_minutes),
+      imagePath: data.image_path,
+      ingredients: data.recipe_ingredients
+        .map((row) => ({
+          ingredientId: row.ingredients.id,
+          homeId: row.ingredients.home_id,
+          name: row.ingredients.name,
+          // Inte formatNumber: den avrundar till två decimaler, och en
+          // sparning utan ändringar ska inte tyst ändra mängden.
+          amount: String(row.display_amount).replace(".", ","),
+          unit: row.display_unit,
+          dimension: row.ingredients.dimension,
+          density: row.ingredients.density_g_per_ml,
+          dietTag: row.ingredients.diet_tag,
+        }))
+        // Samma ordning som detaljsidan.
+        .sort((a, b) => a.name.localeCompare(b.name, "sv")),
+      steps: data.recipe_steps.map((step) => ({ content: step.content })),
+    },
+    imageUrl: data.image_path
+      ? (imageUrls.get(data.image_path) ?? null)
+      : null,
   };
 }
 

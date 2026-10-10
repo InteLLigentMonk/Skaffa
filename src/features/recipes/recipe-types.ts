@@ -19,6 +19,13 @@ export type RecipeFormValues = {
 
 export type RecipeStepValue = { content: string };
 
+// Ett befintligt recept i formulärets form. Bildens URL ligger bredvid
+// värdena: den sparas aldrig, den behövs bara för förhandsvisningen.
+export type RecipeFormDraft = {
+  values: RecipeFormValues;
+  imageUrl: string | null;
+};
+
 export type RecipeIngredientRow = {
   ingredientId: string;
   homeId: string | null;

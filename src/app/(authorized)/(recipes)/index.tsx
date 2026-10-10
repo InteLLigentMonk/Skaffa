@@ -76,7 +76,7 @@ const RecipeIndex = () => {
 
   const createRecipe = (name?: string) =>
     router.push(
-      name ? { pathname: "/add-recipe", params: { name } } : "/add-recipe",
+      name ? { pathname: "/recipe-form", params: { name } } : "/recipe-form",
     );
 
   return (

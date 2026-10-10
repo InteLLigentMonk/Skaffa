@@ -61,7 +61,7 @@ const RootNavigator = () => {
       <Stack.Protected guard={isAuthenticated && !isRecoverySession && hasHome}>
         <Stack.Screen name="(authorized)" options={{ headerShown: false }} />
         <Stack.Screen
-          name="add-recipe"
+          name="recipe-form"
           options={{
             presentation: "modal",
             headerShown: false,

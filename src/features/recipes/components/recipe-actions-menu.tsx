@@ -11,6 +11,7 @@ import { View } from "react-native";
 
 type Props = {
   recipeName: string;
+  onEdit: () => void;
   onDuplicate: () => void;
   onDelete: () => void;
   isDuplicating: boolean;
@@ -18,10 +19,11 @@ type Props = {
   error: string | null;
 };
 
-// Redigera och Publicera är avstängda tills receptformuläret klarar steg och
-// bild — publicering kräver båda (guard_publish_requirements).
+// Publicera är avstängt tills publiceringsflödet finns. Publicering kräver
+// steg och bild (guard_publish_requirements).
 const RecipeActionsMenu = ({
   recipeName,
+  onEdit,
   onDuplicate,
   onDelete,
   isDuplicating,
@@ -59,7 +61,11 @@ const RecipeActionsMenu = ({
             align="end"
             width={220}
           >
-            <MenuRow icon="create-outline" title="Redigera recept" isDisabled />
+            <MenuRow
+              icon="create-outline"
+              title="Redigera recept"
+              onPress={onEdit}
+            />
             <MenuRow icon="globe-outline" title="Publicera" isDisabled />
             <MenuRow
               icon="copy-outline"

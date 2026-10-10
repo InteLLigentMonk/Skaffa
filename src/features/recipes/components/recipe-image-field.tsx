@@ -20,11 +20,13 @@ type Props = {
   placeholderEmoji: string;
 };
 
-// Knappen och förhandsvisningen är samma ruta, med samma mått i alla
-// tillstånd — inget i formuläret flyttar sig när bilden kommer.
+// Formulärets toppbild, med samma mått som detaljsidans. Knappen och
+// förhandsvisningen är samma yta i alla tillstånd — inget i formuläret flyttar
+// sig när bilden kommer. "Byt", "Ta bort" och "Försök igen" ligger i en meny
+// bakom ytan.
 //
-// 80 px rymmer inga knappar, så "Byt", "Ta bort" och "Försök igen" ligger i
-// en meny bakom rutan i stället för ovanpå den.
+// Arket under lägger sig 24 px upp över bilden (-mt-6), så allt som ska synas
+// längst ner ligger minst så högt.
 const RecipeImageField = ({ image, placeholderEmoji }: Props) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { status, previewUri } = image;
@@ -38,108 +40,108 @@ const RecipeImageField = ({ image, placeholderEmoji }: Props) => {
   const pick = (source: RecipeImageSource) => choose(() => image.pick(source));
 
   return (
-    <View className="items-center gap-1">
-      <Menu
-        isOpen={isMenuOpen}
-        onOpenChange={setIsMenuOpen}
-        isDisabled={image.isUploading}
-      >
-        <Menu.Trigger asChild>
-          <PressableFeedback
-            accessibilityRole="button"
-            accessibilityLabel={
-              status === "empty" ? "Lägg till bild" : "Ändra bild"
-            }
-            className="size-20 overflow-hidden rounded-2xl bg-secondary-soft"
-          >
-            {previewUri ? (
-              <StyledImage
-                source={{ uri: previewUri }}
-                className="size-full"
-                contentFit="cover"
-              />
-            ) : (
-              <View className="size-full items-center justify-center gap-0.5 p-1">
-                <Emoji size={22}>{placeholderEmoji}</Emoji>
-                <Typography.Paragraph
-                  type="body-xs"
-                  color="muted"
-                  className="text-center leading-tight"
-                >
+    <Menu
+      isOpen={isMenuOpen}
+      onOpenChange={setIsMenuOpen}
+      isDisabled={image.isUploading}
+    >
+      <Menu.Trigger asChild>
+        <PressableFeedback
+          accessibilityRole="button"
+          accessibilityLabel={status === "empty" ? "Lägg till bild" : "Ändra bild"}
+          className="h-72 w-full overflow-hidden bg-secondary-soft"
+        >
+          {previewUri ? (
+            <StyledImage
+              source={{ uri: previewUri }}
+              className="size-full"
+              contentFit="cover"
+              transition={150}
+            />
+          ) : (
+            <View className="size-full items-center justify-center gap-2 pb-6">
+              <Emoji size={72}>{placeholderEmoji}</Emoji>
+              <View className="flex-row items-center gap-1.5">
+                <StyledIonicons
+                  name="camera-outline"
+                  size={18}
+                  className="text-muted"
+                />
+                <Typography.Paragraph weight="bold" color="muted">
                   Lägg till bild
                 </Typography.Paragraph>
-                <View className="absolute right-1 top-1">
-                  <StyledIonicons
-                    name="camera-outline"
-                    size={14}
-                    className="text-muted"
-                  />
-                </View>
               </View>
-            )}
+              <Typography.Paragraph type="body-xs" color="muted">
+                Krävs för att publicera
+              </Typography.Paragraph>
+            </View>
+          )}
 
-            {status === "uploading" && (
-              <View className="absolute inset-0 items-center justify-center bg-black/40">
-                <Spinner color="white" />
-              </View>
-            )}
-            {status === "error" && (
-              <View className="absolute inset-0 items-center justify-center bg-black/50">
-                <StyledIonicons
-                  name="refresh"
-                  size={24}
-                  className="text-white"
-                />
-              </View>
-            )}
-          </PressableFeedback>
-        </Menu.Trigger>
-        <Menu.Portal>
-          <Menu.Overlay />
-          <Menu.Content
-            presentation="popover"
-            placement="bottom"
-            align="end"
-            width={220}
-          >
-            {status === "error" && (
-              <MenuRow
-                icon="refresh-outline"
-                title="Försök igen"
-                onPress={choose(image.retry)}
+          {status === "done" && previewUri && (
+            <View className="absolute bottom-9 right-4 flex-row items-center gap-1.5 rounded-full bg-background px-3 py-1.5">
+              <StyledIonicons
+                name="camera-outline"
+                size={16}
+                className="text-foreground"
               />
-            )}
+              <Typography.Paragraph type="body-sm" weight="bold">
+                Byt bild
+              </Typography.Paragraph>
+            </View>
+          )}
+          {status === "uploading" && (
+            <View className="absolute inset-0 items-center justify-center bg-black/40 pb-6">
+              <Spinner size="lg" color="white" />
+            </View>
+          )}
+          {status === "error" && (
+            <View className="absolute inset-0 items-center justify-center gap-2 bg-black/50 pb-6">
+              <StyledIonicons name="refresh" size={32} className="text-white" />
+              <Typography.Paragraph weight="bold" className="text-white">
+                Uppladdningen misslyckades
+              </Typography.Paragraph>
+            </View>
+          )}
+        </PressableFeedback>
+      </Menu.Trigger>
+      <Menu.Portal>
+        <Menu.Overlay />
+        <Menu.Content
+          presentation="popover"
+          placement="bottom"
+          align="center"
+          width={240}
+        >
+          {status === "error" && (
             <MenuRow
-              icon="camera-outline"
-              title={status === "empty" ? "Ta foto" : "Byt: ta foto"}
-              onPress={pick("camera")}
+              icon="refresh-outline"
+              title="Försök igen"
+              onPress={choose(image.retry)}
             />
+          )}
+          <MenuRow
+            icon="camera-outline"
+            title={status === "empty" ? "Ta foto" : "Byt: ta foto"}
+            onPress={pick("camera")}
+          />
+          <MenuRow
+            icon="images-outline"
+            title={
+              status === "empty" ? "Välj från bilder" : "Byt: välj från bilder"
+            }
+            onPress={pick("library")}
+          />
+          {status !== "empty" && (
             <MenuRow
-              icon="images-outline"
-              title={
-                status === "empty" ? "Välj från bilder" : "Byt: välj från bilder"
-              }
-              onPress={pick("library")}
+              icon="trash-outline"
+              title="Ta bort"
+              variant="danger"
+              onPress={choose(image.remove)}
             />
-            {status !== "empty" && (
-              <MenuRow
-                icon="trash-outline"
-                title="Ta bort"
-                variant="danger"
-                onPress={choose(image.remove)}
-              />
-            )}
-          </Menu.Content>
-        </Menu.Portal>
-      </Menu>
-      <Typography.Paragraph
-        type="body-xs"
-        color="muted"
-        className="w-24 text-center"
-      >
-        *Krävs för att publicera
-      </Typography.Paragraph>
-    </View>
+          )}
+        </Menu.Content>
+      </Menu.Portal>
+    </Menu>
   );
 };
 
