@@ -1,6 +1,13 @@
 import { IsoDate } from "@/lib/dates";
 import { supabase } from "@/lib/supabase";
-import { MealSlot, PlannedMeal, sortSlots } from "./plan-types";
+import {
+  IsoWeekday,
+  MealSlot,
+  PlannedMeal,
+  SaveStandingMealInput,
+  sortSlots,
+  StandingMeal,
+} from "./plan-types";
 
 // Båda gränserna inklusive. RLS (meals_all) begränsar till det egna hemmet.
 export async function getPlannedMeals(
@@ -56,6 +63,61 @@ export async function setVisibleSlots(
 
   if (error) throw error;
   return sortSlots(data.visible_slots);
+}
+
+/**
+ * Sår stående måltider i veckorna mellan from och to, de som ingen öppnat än.
+ * Billig no-op för redan sådda veckor (seeded_weeks).
+ */
+export async function seedStandingWeeks(from: IsoDate, to: IsoDate) {
+  const { error } = await supabase.rpc("seed_standing_weeks", {
+    _from: from,
+    _to: to,
+  });
+
+  if (error) throw error;
+}
+
+export async function getStandingMeals(): Promise<StandingMeal[]> {
+  const { data, error } = await supabase
+    .from("standing_meals")
+    .select("id, recipe_id, slot, weekdays, servings, recipes(name)")
+    .order("slot")
+    .order("created_at");
+
+  if (error) throw error;
+
+  return data.map((row) => ({
+    id: row.id,
+    recipeId: row.recipe_id,
+    recipeName: row.recipes.name,
+    slot: row.slot,
+    // check-constrainten håller värdena inom 1–7.
+    weekdays: row.weekdays as IsoWeekday[],
+    servings: row.servings,
+  }));
+}
+
+export async function saveStandingMeal(
+  input: SaveStandingMealInput,
+): Promise<string> {
+  const { data, error } = await supabase.rpc("save_standing_meal", {
+    // RPC:n tar null för en ny regel; de genererade typerna känner inte till
+    // att parametern är nullbar.
+    _id: input.id as string,
+    _recipe_id: input.recipeId,
+    _slot: input.slot,
+    _weekdays: input.weekdays,
+    _servings: input.servings,
+  });
+
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteStandingMeal(id: string) {
+  const { error } = await supabase.rpc("delete_standing_meal", { _id: id });
+  if (error) throw error;
 }
 
 export type PlanMealInput = {

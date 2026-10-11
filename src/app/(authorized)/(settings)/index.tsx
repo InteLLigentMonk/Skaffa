@@ -1,5 +1,8 @@
 import { MEAL_SLOT_LABELS } from "@/features/plan/plan-types";
-import { useVisibleSlots } from "@/features/plan/hooks/use-plan";
+import {
+  useStandingMeals,
+  useVisibleSlots,
+} from "@/features/plan/hooks/use-plan";
 import { useHome } from "@/features/home/hooks/use-home";
 import { StyledIonicons } from "@/utils/helpers";
 import { router } from "expo-router";
@@ -40,6 +43,7 @@ const ComingSoonItem = ({
 const SettingsIndex = () => {
   const { data: home } = useHome();
   const visibleSlots = useVisibleSlots();
+  const standingCount = useStandingMeals().data?.length;
 
   const slotsSummary = visibleSlots.data
     ?.map((s) => MEAL_SLOT_LABELS[s])
@@ -86,11 +90,18 @@ const SettingsIndex = () => {
               <ListGroup.ItemSuffix />
             </ListGroup.Item>
             <Separator className="mx-4" />
-            <ComingSoonItem
-              icon="repeat-outline"
-              title="Stående måltider"
-              description="Recept som återkommer varje vecka"
-            />
+            <ListGroup.Item onPress={() => router.push("/standing-meals")}>
+              <ItemIcon name="repeat-outline" />
+              <ListGroup.ItemContent>
+                <ListGroup.ItemTitle>Stående måltider</ListGroup.ItemTitle>
+                <ListGroup.ItemDescription numberOfLines={1}>
+                  {standingCount
+                    ? `${standingCount} st som återkommer varje vecka`
+                    : "Recept som återkommer varje vecka"}
+                </ListGroup.ItemDescription>
+              </ListGroup.ItemContent>
+              <ListGroup.ItemSuffix />
+            </ListGroup.Item>
             <Separator className="mx-4" />
             <ComingSoonItem
               icon="bookmark-outline"

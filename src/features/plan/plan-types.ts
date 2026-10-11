@@ -40,6 +40,55 @@ export type PlannedMeal = {
   recipeName: string;
 };
 
+/** ISO-veckodag som i standing_meals.weekdays: 1 = måndag … 7 = söndag. */
+export type IsoWeekday = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
+export const WEEKDAYS: { day: IsoWeekday; short: string }[] = [
+  { day: 1, short: "Mån" },
+  { day: 2, short: "Tis" },
+  { day: 3, short: "Ons" },
+  { day: 4, short: "Tor" },
+  { day: 5, short: "Fre" },
+  { day: 6, short: "Lör" },
+  { day: 7, short: "Sön" },
+];
+
+// Mönstren finns inte i databasen — där är allt bara en delmängd av 1–7.
+export const WEEKDAY_PRESETS: { label: string; days: IsoWeekday[] }[] = [
+  { label: "Varje dag", days: [1, 2, 3, 4, 5, 6, 7] },
+  { label: "Vardagar", days: [1, 2, 3, 4, 5] },
+  { label: "Helger", days: [6, 7] },
+];
+
+const sameDays = (a: number[], b: number[]) =>
+  a.length === b.length && a.every((d) => b.includes(d));
+
+/** "Vardagar", eller "mån, ons, fre" när det inte är ett känt mönster. */
+export const formatWeekdays = (days: number[]) => {
+  const preset = WEEKDAY_PRESETS.find((p) => sameDays(p.days, days));
+  if (preset) return preset.label;
+  return WEEKDAYS.filter((w) => days.includes(w.day))
+    .map((w) => w.short.toLowerCase())
+    .join(", ");
+};
+
+export const matchesPreset = (days: number[], preset: IsoWeekday[]) =>
+  sameDays(days, preset);
+
+export type StandingMeal = {
+  id: string;
+  recipeId: string;
+  recipeName: string;
+  slot: MealSlot;
+  weekdays: IsoWeekday[];
+  servings: number;
+};
+
+export type SaveStandingMealInput = Omit<StandingMeal, "id" | "recipeName"> & {
+  /** null = ny regel. */
+  id: string | null;
+};
+
 export type GroupedMeals = {
   /** Vilka av de synliga måltiderna som har minst ett recept, per dag. */
   filledByDate: Record<IsoDate, Set<MealSlot>>;
