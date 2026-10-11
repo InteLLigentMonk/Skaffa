@@ -21,12 +21,13 @@ import {
   MealSlot,
   PLAN_WEEKS_AHEAD,
   PlannedMeal,
+  planRange,
   planWeeks,
   sameWeekdayIn,
   sortSlots,
 } from "@/features/plan/plan-types";
 import { useGenerateShoppingList } from "@/features/shopping-list/hooks/use-shopping-list";
-import { addDays, IsoDate, today, weekdayLong, weekMonday } from "@/lib/dates";
+import { IsoDate, today, weekdayLong, weekMonday } from "@/lib/dates";
 import { StyledIonicons } from "@/utils/helpers";
 import { useRouter } from "expo-router";
 import {
@@ -51,10 +52,11 @@ const PlanScreen = () => {
   const { data: home } = useHome();
 
   const weeks = planWeeks();
-  const rangeEnd = addDays(weeks[weeks.length - 1], 6);
-  // Hela intervallet i en fråga, samma nyckel som planeringsarket i Recept:
-  // veckoväljarens räknare behöver alla veckor, och att bläddra blir gratis.
-  const meals = usePlannedMeals(weeks[0], rangeEnd);
+  const range = planRange();
+  // Hela intervallet i en fråga, samma nyckel som planeringsarket i Recept
+  // och hemsidan: veckoväljarens räknare behöver alla veckor, och att bläddra
+  // blir gratis.
+  const meals = usePlannedMeals(range.from, range.to);
   const visibleSlots = useVisibleSlots();
   const deleteMeal = useDeletePlannedMeal();
   const generate = useGenerateShoppingList();

@@ -2,7 +2,6 @@ import { useSheetOpen } from "@/hooks/use-sheet-open";
 import NumberSelect from "@/components/number-select";
 import { RecipeScope } from "@/features/recipes/recipe-types";
 import {
-  addDays,
   formatDayLong,
   IsoDate,
   today,
@@ -23,6 +22,7 @@ import {
   mealKey,
   MealSlot,
   PLAN_WEEKS_AHEAD,
+  planRange,
   planWeeks,
 } from "../plan-types";
 import DayPicker from "./day-picker";
@@ -58,11 +58,11 @@ const PlanMealSheet = ({
   const sheetOpen = useSheetOpen(isOpen);
   const currentWeek = weekMonday(today());
   const weeks = planWeeks();
-  const rangeEnd = addDays(weeks[weeks.length - 1], 6);
+  const range = planRange();
 
   // Hela intervallet i en fråga: veckoväljarens räknare behöver alla veckor
   // ändå, och att bläddra mellan veckor blir då gratis.
-  const meals = usePlannedMeals(currentWeek, rangeEnd);
+  const meals = usePlannedMeals(range.from, range.to);
   const visibleSlots = useVisibleSlots();
   const plan = usePlanRecipe();
 

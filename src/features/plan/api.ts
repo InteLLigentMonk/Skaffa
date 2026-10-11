@@ -20,7 +20,7 @@ export async function getPlannedMeals(
   const { data, error } = await supabase
     .from("planned_meals")
     .select(
-      "id, meal_date, slot, servings, recipe_id, recipes(name, image_path)",
+      "id, meal_date, slot, servings, recipe_id, recipes(name, image_path, prep_minutes)",
     )
     .gte("meal_date", from)
     .lte("meal_date", to)
@@ -42,6 +42,7 @@ export async function getPlannedMeals(
     servings: row.servings,
     recipeId: row.recipe_id,
     recipeName: row.recipes.name,
+    prepMinutes: row.recipes.prep_minutes,
     imagePath: row.recipes.image_path,
     imageUrl: row.recipes.image_path
       ? (imageUrls.get(row.recipes.image_path) ?? null)
