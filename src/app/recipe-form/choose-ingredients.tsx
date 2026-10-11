@@ -77,6 +77,9 @@ const ChooseIngredients = () => {
           });
         }}
         selectedIds={selectedIds}
+        // Diskmedel och toapapper hör inte hemma i ett recept. De finns för
+        // återkommande varor på inköpslistan.
+        hiddenCategories={["household"]}
       />
     </ModalScreen>
   );

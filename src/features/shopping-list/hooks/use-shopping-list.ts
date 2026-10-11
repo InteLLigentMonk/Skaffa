@@ -7,13 +7,58 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { getCategoryOrder, setCategoryOrder } from "../api";
+import {
+  deleteRecurringItem,
+  getCategoryOrder,
+  getRecurringItems,
+  saveRecurringItem,
+  setCategoryOrder,
+} from "../api";
+import { SaveRecurringItemInput } from "../shopping-list-types";
 
 // Hemmets, så nycklarna bär hem-id — samma skäl som i homeKeys.
 export const shoppingListKeys = {
   all: ["shopping-list"] as const,
   categoryOrder: (homeId: string) =>
     ["shopping-list", homeId, "category-order"] as const,
+  recurring: (homeId: string) =>
+    ["shopping-list", homeId, "recurring"] as const,
+};
+
+export const useRecurringItems = () => {
+  const { data: home } = useHome();
+
+  return useQuery({
+    queryKey: shoppingListKeys.recurring(home?.id ?? ""),
+    queryFn: home ? getRecurringItems : skipToken,
+  });
+};
+
+export const useSaveRecurringItem = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, PostgrestError, SaveRecurringItemInput>({
+    mutationFn: saveRecurringItem,
+    onSuccess: (_data, { homeId }) =>
+      queryClient.invalidateQueries({
+        queryKey: shoppingListKeys.recurring(homeId),
+      }),
+  });
+};
+
+export const useDeleteRecurringItem = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, PostgrestError, { id: string; homeId: string }>({
+    mutationFn: ({ id }) => deleteRecurringItem(id),
+    // Inte awaitad, av samma skäl som useDeleteStandingMeal: skärmen går
+    // tillbaka direkt i stället för att först visa "finns inte längre".
+    onSuccess: (_data, { homeId }) => {
+      queryClient.invalidateQueries({
+        queryKey: shoppingListKeys.recurring(homeId),
+      });
+    },
+  });
 };
 
 export const useCategoryOrder = () => {

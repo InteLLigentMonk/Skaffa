@@ -4,6 +4,7 @@ import {
   useVisibleSlots,
 } from "@/features/plan/hooks/use-plan";
 import { useHome } from "@/features/home/hooks/use-home";
+import { useRecurringItems } from "@/features/shopping-list/hooks/use-shopping-list";
 import { StyledIonicons } from "@/utils/helpers";
 import { router } from "expo-router";
 import { Chip, Label, ListGroup, Separator, Typography } from "heroui-native";
@@ -44,6 +45,7 @@ const SettingsIndex = () => {
   const { data: home } = useHome();
   const visibleSlots = useVisibleSlots();
   const standingCount = useStandingMeals().data?.length;
+  const recurringCount = useRecurringItems().data?.length;
 
   const slotsSummary = visibleSlots.data
     ?.map((s) => MEAL_SLOT_LABELS[s])
@@ -126,11 +128,18 @@ const SettingsIndex = () => {
               <ListGroup.ItemSuffix />
             </ListGroup.Item>
             <Separator className="mx-4" />
-            <ComingSoonItem
-              icon="cart-outline"
-              title="Återkommande varor"
-              description="Läggs till på varje veckas lista"
-            />
+            <ListGroup.Item onPress={() => router.push("/recurring-items")}>
+              <ItemIcon name="cart-outline" />
+              <ListGroup.ItemContent>
+                <ListGroup.ItemTitle>Återkommande varor</ListGroup.ItemTitle>
+                <ListGroup.ItemDescription numberOfLines={1}>
+                  {recurringCount
+                    ? `${recurringCount} st på varje veckas lista`
+                    : "Läggs till på varje veckas lista"}
+                </ListGroup.ItemDescription>
+              </ListGroup.ItemContent>
+              <ListGroup.ItemSuffix />
+            </ListGroup.Item>
           </ListGroup>
         </View>
       </ScrollView>
