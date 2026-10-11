@@ -1,5 +1,6 @@
 import { useHome } from "@/features/home/hooks/use-home";
 import { IngredientCategory } from "@/features/ingredients/ingredient-types";
+import { IsoDate } from "@/lib/dates";
 import { PostgrestError } from "@supabase/supabase-js";
 import {
   skipToken,
@@ -9,6 +10,7 @@ import {
 } from "@tanstack/react-query";
 import {
   deleteRecurringItem,
+  generateShoppingList,
   getCategoryOrder,
   getRecurringItems,
   saveRecurringItem,
@@ -100,5 +102,22 @@ export const useSetCategoryOrder = () => {
     },
     // Ingen onSuccess som skriver serverns svar: drar man två gånger snabbt
     // hade det första svaret skrivit över den andra dragningens ordning.
+  });
+};
+
+// Det finns ingen fråga för själva listan än; shoppingListKeys.all fångar den
+// när Lista-fliken byggs.
+export const useGenerateShoppingList = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    string,
+    PostgrestError,
+    { homeId: string; weekStart: IsoDate }
+  >({
+    mutationFn: ({ homeId, weekStart }) =>
+      generateShoppingList(homeId, weekStart),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: shoppingListKeys.all }),
   });
 };

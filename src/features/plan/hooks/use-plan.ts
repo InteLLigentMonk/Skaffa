@@ -10,6 +10,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import {
+  deletePlannedMeal,
   deleteStandingMeal,
   getPlannedMeals,
   getStandingMeals,
@@ -19,6 +20,8 @@ import {
   saveStandingMeal,
   seedStandingWeeks,
   setVisibleSlots,
+  updatePlannedMeal,
+  UpdatePlannedMealInput,
 } from "../api";
 import { MealSlot, SaveStandingMealInput } from "../plan-types";
 
@@ -131,5 +134,25 @@ export const usePlanRecipe = () => {
         scope === "explore" &&
           queryClient.invalidateQueries({ queryKey: ["recipes", "list"] }),
       ]),
+  });
+};
+
+// Portioner, byt recept och flytta. Awaitad: arket stängs först när planen
+// visar ändringen, så kortet inte hinner blinka till med det gamla värdet.
+export const useUpdatePlannedMeal = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<string, PostgrestError, UpdatePlannedMealInput>({
+    mutationFn: updatePlannedMeal,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: planKeys.all }),
+  });
+};
+
+export const useDeletePlannedMeal = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, PostgrestError, string>({
+    mutationFn: deletePlannedMeal,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: planKeys.all }),
   });
 };

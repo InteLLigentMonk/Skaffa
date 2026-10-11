@@ -1,3 +1,4 @@
+import { useSheetOpen } from "@/hooks/use-sheet-open";
 import NumberSelect from "@/components/number-select";
 import { RecipeScope } from "@/features/recipes/recipe-types";
 import {
@@ -5,14 +6,11 @@ import {
   formatDayLong,
   IsoDate,
   today,
-  weekdayLong,
   weekMonday,
 } from "@/lib/dates";
 import {
-  Alert,
   BottomSheet,
   Button,
-  Chip,
   FieldError,
   Spinner,
   Typography,
@@ -22,12 +20,14 @@ import { View } from "react-native";
 import { usePlannedMeals, usePlanRecipe, useVisibleSlots } from "../hooks/use-plan";
 import {
   groupMeals,
-  MEAL_SLOT_LABELS,
   mealKey,
   MealSlot,
   PLAN_WEEKS_AHEAD,
+  planWeeks,
 } from "../plan-types";
 import DayPicker from "./day-picker";
+import MealConflictAlert, { ConflictChoice } from "./meal-conflict-alert";
+import SlotChips from "./slot-chips";
 import WeekPicker from "./week-picker";
 
 type Props = {
@@ -38,8 +38,6 @@ type Props = {
   servings: number;
   onServingsChange: (servings: number) => void;
 };
-
-type ConflictChoice = "add" | "replace";
 
 const firstSelectableDay = (monday: IsoDate) => {
   const now = today();
@@ -56,10 +54,10 @@ const PlanMealSheet = ({
   servings,
   onServingsChange,
 }: Props) => {
+  // Se use-sheet-open: arket monteras ofta redan öppet.
+  const sheetOpen = useSheetOpen(isOpen);
   const currentWeek = weekMonday(today());
-  const weeks = Array.from({ length: PLAN_WEEKS_AHEAD + 1 }, (_, i) =>
-    addDays(currentWeek, i * 7),
-  );
+  const weeks = planWeeks();
   const rangeEnd = addDays(weeks[weeks.length - 1], 6);
 
   // Hela intervallet i en fråga: veckoväljarens räknare behöver alla veckor
@@ -129,7 +127,7 @@ const PlanMealSheet = ({
 
   return (
     <BottomSheet
-      isOpen={isOpen}
+      isOpen={sheetOpen}
       // onOpenChange på roten fångar alla stängningar (svep, overlay, kod) —
       // se density-sheet.tsx.
       onOpenChange={(open) => {
@@ -206,65 +204,27 @@ const PlanMealSheet = ({
                   <Typography.Paragraph type="body-sm" weight="semibold">
                     Vilken måltid?
                   </Typography.Paragraph>
-                  <View className="flex-row flex-wrap gap-2">
-                    {slots.map((s) => {
-                      const isSelected = s === slot;
-                      const isTaken =
-                        (grouped.byMeal[mealKey(date, s)]?.length ?? 0) > 0;
-
-                      return (
-                        <View key={s}>
-                          <Chip
-                            size="lg"
-                            variant={isSelected ? "soft" : "secondary"}
-                            color={isSelected ? "accent" : "default"}
-                            onPress={() => {
-                              setPickedSlot(s);
-                              setChoice(null);
-                            }}
-                            accessibilityState={{ selected: isSelected }}
-                          >
-                            <Chip.Label>{MEAL_SLOT_LABELS[s]}</Chip.Label>
-                          </Chip>
-                          {isTaken && (
-                            <View className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-secondary" />
-                          )}
-                        </View>
-                      );
-                    })}
-                  </View>
+                  <SlotChips
+                    slots={slots}
+                    value={slot}
+                    onChange={(s) => {
+                      setPickedSlot(s);
+                      setChoice(null);
+                    }}
+                    isTaken={(s) =>
+                      (grouped.byMeal[mealKey(date, s)]?.length ?? 0) > 0
+                    }
+                  />
                 </View>
 
                 {hasConflict && slot && (
-                  <Alert status="warning">
-                    <Alert.Indicator />
-                    <Alert.Content className="gap-3">
-                      <Alert.Description>
-                        {capitalize(weekdayLong(date))}{" "}
-                        {MEAL_SLOT_LABELS[slot].toLowerCase()} har redan{" "}
-                        {others.map((meal) => meal.recipeName).join(", ")}.
-                        Vill du laga båda, eller byta ut?
-                      </Alert.Description>
-                      <View className="flex-row gap-2">
-                        <Button
-                          size="sm"
-                          className="flex-1"
-                          variant={choice === "add" ? "primary" : "outline"}
-                          onPress={() => setChoice("add")}
-                        >
-                          <Button.Label>Lägg till</Button.Label>
-                        </Button>
-                        <Button
-                          size="sm"
-                          className="flex-1"
-                          variant={choice === "replace" ? "primary" : "outline"}
-                          onPress={() => setChoice("replace")}
-                        >
-                          <Button.Label>Ersätt</Button.Label>
-                        </Button>
-                      </View>
-                    </Alert.Content>
-                  </Alert>
+                  <MealConflictAlert
+                    date={date}
+                    slot={slot}
+                    otherNames={others.map((meal) => meal.recipeName)}
+                    choice={choice}
+                    onChoiceChange={setChoice}
+                  />
                 )}
 
                 <View className="flex-row items-center justify-between rounded-2xl bg-surface-secondary p-3">
@@ -302,8 +262,5 @@ const PlanMealSheet = ({
     </BottomSheet>
   );
 };
-
-const capitalize = (text: string) =>
-  text.charAt(0).toUpperCase() + text.slice(1);
 
 export default PlanMealSheet;

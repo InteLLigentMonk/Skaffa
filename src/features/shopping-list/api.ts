@@ -1,4 +1,5 @@
 import { IngredientCategory } from "@/features/ingredients/ingredient-types";
+import { IsoDate } from "@/lib/dates";
 import { supabase } from "@/lib/supabase";
 import {
   completeCategoryOrder,
@@ -98,4 +99,22 @@ export async function setCategoryOrder(
 
   if (error) throw error;
   return completeCategoryOrder(data.category_order);
+}
+
+/**
+ * Bygger (eller bygger om) veckans inköpslista ur veckoplanen och hemmets
+ * återkommande varor. Säker att köra flera gånger: avbockade rader förblir
+ * avbockade och det som inte längre behövs markeras is_orphaned.
+ */
+export async function generateShoppingList(
+  homeId: string,
+  weekStart: IsoDate,
+): Promise<string> {
+  const { data, error } = await supabase.rpc("generate_shopping_list", {
+    _home_id: homeId,
+    _week_start: weekStart,
+  });
+
+  if (error) throw error;
+  return data;
 }
