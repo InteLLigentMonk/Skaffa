@@ -1,5 +1,11 @@
 import { Enums } from "@/lib/database.types";
-import { IsoDate, weekMonday } from "@/lib/dates";
+import {
+  addDays,
+  fromIsoDate,
+  IsoDate,
+  today,
+  weekMonday,
+} from "@/lib/dates";
 
 export type MealSlot = Enums<"meal_slot">;
 
@@ -31,6 +37,25 @@ export const sortSlots = (slots: MealSlot[]) =>
 /** Innevarande vecka plus så här många framåt går att planera i. */
 export const PLAN_WEEKS_AHEAD = 6;
 
+/** Veckorna som går att planera i, som måndagar i ordning. */
+export const planWeeks = (): IsoDate[] => {
+  const current = weekMonday(today());
+  return Array.from({ length: PLAN_WEEKS_AHEAD + 1 }, (_, i) =>
+    addDays(current, i * 7),
+  );
+};
+
+/**
+ * Samma veckodag som `date`, fast i veckan som börjar `monday`. Hamnar den
+ * före idag blir det idag — passerade dagar går inte att planera.
+ */
+export const sameWeekdayIn = (monday: IsoDate, date: IsoDate): IsoDate => {
+  const offset = (fromIsoDate(date).getDay() + 6) % 7;
+  const day = addDays(monday, offset);
+  const now = today();
+  return day < now ? now : day;
+};
+
 export type PlannedMeal = {
   id: string;
   date: IsoDate;
@@ -38,6 +63,8 @@ export type PlannedMeal = {
   servings: number;
   recipeId: string;
   recipeName: string;
+  imagePath: string | null;
+  imageUrl: string | null;
 };
 
 /** ISO-veckodag som i standing_meals.weekdays: 1 = måndag … 7 = söndag. */

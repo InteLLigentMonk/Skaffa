@@ -1,3 +1,4 @@
+import { resolveImageUrls } from "@/features/recipes/api";
 import { IsoDate } from "@/lib/dates";
 import { supabase } from "@/lib/supabase";
 import {
@@ -10,13 +11,17 @@ import {
 } from "./plan-types";
 
 // Båda gränserna inklusive. RLS (meals_all) begränsar till det egna hemmet.
+// Bilderna löses upp i samma anrop, så veckoplanens kort inte behöver en egen
+// fråga per recept. Samma recept flera dagar ger samma sökväg och en URL.
 export async function getPlannedMeals(
   from: IsoDate,
   to: IsoDate,
 ): Promise<PlannedMeal[]> {
   const { data, error } = await supabase
     .from("planned_meals")
-    .select("id, meal_date, slot, servings, recipe_id, recipes(name)")
+    .select(
+      "id, meal_date, slot, servings, recipe_id, recipes(name, image_path)",
+    )
     .gte("meal_date", from)
     .lte("meal_date", to)
     .order("meal_date")
@@ -25,6 +30,11 @@ export async function getPlannedMeals(
 
   if (error) throw error;
 
+  const paths = [
+    ...new Set(data.flatMap((row) => row.recipes.image_path ?? [])),
+  ];
+  const imageUrls = await resolveImageUrls("home", paths);
+
   return data.map((row) => ({
     id: row.id,
     date: row.meal_date,
@@ -32,6 +42,10 @@ export async function getPlannedMeals(
     servings: row.servings,
     recipeId: row.recipe_id,
     recipeName: row.recipes.name,
+    imagePath: row.recipes.image_path,
+    imageUrl: row.recipes.image_path
+      ? (imageUrls.get(row.recipes.image_path) ?? null)
+      : null,
   }));
 }
 
@@ -140,4 +154,32 @@ export async function planMeal(input: PlanMealInput) {
 
   if (error) throw error;
   return data;
+}
+
+export type UpdatePlannedMealInput = PlanMealInput & {
+  id: string;
+};
+
+// Portioner, byt recept och flytta går alla hit. RPC:n slår ihop raden med en
+// likadan i målmåltiden i stället för att krocka med unique-constrainten.
+export async function updatePlannedMeal(input: UpdatePlannedMealInput) {
+  const { data, error } = await supabase.rpc("update_planned_meal", {
+    _id: input.id,
+    _recipe_id: input.recipeId,
+    _date: input.date,
+    _slot: input.slot,
+    _servings: input.servings,
+    _replace: input.replace,
+  });
+
+  if (error) throw error;
+  return data;
+}
+
+// Direkt mot tabellen: RLS (meals_all) räcker, och det finns inget att hålla
+// ihop. En borttagen instans av en stående måltid kommer inte tillbaka —
+// veckan är redan sådd (seeded_weeks).
+export async function deletePlannedMeal(id: string) {
+  const { error } = await supabase.from("planned_meals").delete().eq("id", id);
+  if (error) throw error;
 }

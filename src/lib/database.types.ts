@@ -1047,6 +1047,17 @@ export type Database = {
         }
         Returns: number
       }
+      update_planned_meal: {
+        Args: {
+          _date: string
+          _id: string
+          _recipe_id: string
+          _replace?: boolean
+          _servings: number
+          _slot: Database["public"]["Enums"]["meal_slot"]
+        }
+        Returns: string
+      }
       week_monday: { Args: { _d: string }; Returns: string }
     }
     Enums: {

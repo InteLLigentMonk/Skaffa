@@ -1,5 +1,5 @@
 import { StyledIonicons } from "@/utils/helpers";
-import { InputGroup } from "heroui-native";
+import { InputGroup, useBottomSheetAwareHandlers } from "heroui-native";
 
 export type SearchBarProps = {
   value: string;
@@ -8,6 +8,10 @@ export type SearchBarProps = {
 };
 
 const SearchBar = ({ value, onChange, placeholder }: SearchBarProps) => {
+  // I ett BottomSheet lyfter arket sig över tangentbordet med de här; utanför
+  // ett ark är de no-ops, så sökfältet beter sig som förut överallt annars.
+  const { onFocus, onBlur } = useBottomSheetAwareHandlers();
+
   return (
     <InputGroup>
       <InputGroup.Prefix isDecorative>
@@ -17,6 +21,8 @@ const SearchBar = ({ value, onChange, placeholder }: SearchBarProps) => {
         placeholder={placeholder}
         value={value}
         onChangeText={onChange}
+        onFocus={onFocus}
+        onBlur={onBlur}
       />
     </InputGroup>
   );

@@ -132,8 +132,8 @@ export async function searchRecipes(
   }));
 }
 
-// Ett anrop per sida i stället för ett per kort.
-async function resolveImageUrls(
+// Ett anrop per sida i stället för ett per kort. Används också av veckoplanen.
+export async function resolveImageUrls(
   scope: RecipeScope,
   paths: string[],
 ): Promise<Map<string, string>> {

@@ -112,17 +112,23 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <QueryClientProvider client={queryClient}>
-        <HeroUINativeProvider>
-          <AuthProvider>
-            {/* Utanför RootNavigator så en parkerad inbjudan överlever att
-                guarden byter gren — både (guest) och (no-home) läser den. */}
-            <PendingInviteProvider>
+        {/* Auth ovanför HeroUINativeProvider: den äger portalvärden, så
+            innehåll i BottomSheet/Menu/Popover.Portal monteras där och ser
+            bara providers som ligger ovanför den. Ett ark som anropar useHome
+            (t.ex. RecipePicker) kraschade annars med "useAuth must be used
+            within an AuthProvider". Samma sak gäller allt under
+            (authorized)/_layout — useAuthorizedUser fungerar inte i en portal. */}
+        <AuthProvider>
+          {/* Utanför RootNavigator så en parkerad inbjudan överlever att
+              guarden byter gren — både (guest) och (no-home) läser den. */}
+          <PendingInviteProvider>
+            <HeroUINativeProvider>
               <ThemeProvider value={navigationTheme}>
                 <RootNavigator />
               </ThemeProvider>
-            </PendingInviteProvider>
-          </AuthProvider>
-        </HeroUINativeProvider>
+            </HeroUINativeProvider>
+          </PendingInviteProvider>
+        </AuthProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>
   );
