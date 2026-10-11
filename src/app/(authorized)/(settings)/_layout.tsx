@@ -14,6 +14,7 @@ const SettingsLayout = () => {
         name="standing-meals"
         options={{ title: "Stående måltider" }}
       />
+      <Stack.Screen name="store-order" options={{ title: "Butiksordning" }} />
       {/* Titeln sätts av skärmen: ny eller ändra. */}
       <Stack.Screen name="standing-meal" />
     </Stack>

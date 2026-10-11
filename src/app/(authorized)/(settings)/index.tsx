@@ -115,11 +115,16 @@ const SettingsIndex = () => {
         <View className="gap-2">
           <Label>Inköp</Label>
           <ListGroup>
-            <ComingSoonItem
-              icon="swap-vertical-outline"
-              title="Butiksordning"
-              description="Sortera listan som du går i affären"
-            />
+            <ListGroup.Item onPress={() => router.push("/store-order")}>
+              <ItemIcon name="swap-vertical-outline" />
+              <ListGroup.ItemContent>
+                <ListGroup.ItemTitle>Butiksordning</ListGroup.ItemTitle>
+                <ListGroup.ItemDescription>
+                  Sortera listan som du går i affären
+                </ListGroup.ItemDescription>
+              </ListGroup.ItemContent>
+              <ListGroup.ItemSuffix />
+            </ListGroup.Item>
             <Separator className="mx-4" />
             <ComingSoonItem
               icon="cart-outline"
