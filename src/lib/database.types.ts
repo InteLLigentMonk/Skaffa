@@ -702,6 +702,7 @@ export type Database = {
           generated_at: string | null
           home_id: string
           id: string
+          plan_changed_at: string | null
           total_cost: number | null
           week_start: string
         }
@@ -710,6 +711,7 @@ export type Database = {
           generated_at?: string | null
           home_id: string
           id?: string
+          plan_changed_at?: string | null
           total_cost?: number | null
           week_start: string
         }
@@ -718,6 +720,7 @@ export type Database = {
           generated_at?: string | null
           home_id?: string
           id?: string
+          plan_changed_at?: string | null
           total_cost?: number | null
           week_start?: string
         }

@@ -30,6 +30,7 @@ när mer än en person rör databasen.
 | `20261011120000_standing_meals.sql` | RPC `save_standing_meal`, `delete_standing_meal` (når redan sådda veckor från i dag) och `seed_standing_weeks`; `seed_standing_meals` hoppar över passerade dagar |
 | `20261011130000_ingredient_name_vs_seed.sql` | Trigger: en hemingrediens får inte heta samma sak som en frö-ingrediens (indexet gäller bara per ägare) |
 | `20261011140000_update_planned_meal.sql` | RPC `update_planned_meal`: ändra portioner, byt recept eller flytta en planerad måltid, med ihopslagning i stället för unique-krock |
+| `20261011150000_shopping_list_plan_changed.sql` | `shopping_lists.plan_changed_at` + trigger på `planned_meals` som stämplar veckans lista, så klienten kan visa "Planen har ändrats" |
 
 Enheter fungerar så här: ingrediensen bär ett **måttslag** (`dimension`), inte ett
 mått. Användaren väljer enhet per receptrad, och `amount_base` härleds av en
