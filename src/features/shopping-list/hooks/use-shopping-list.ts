@@ -1,6 +1,7 @@
 import { useHome } from "@/features/home/hooks/use-home";
 import { IngredientCategory } from "@/features/ingredients/ingredient-types";
-import { IsoDate } from "@/lib/dates";
+import { seedStandingWeeks } from "@/features/plan/api";
+import { addDays, IsoDate } from "@/lib/dates";
 import { PostgrestError } from "@supabase/supabase-js";
 import {
   skipToken,
@@ -9,14 +10,24 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import {
+  addListItem,
+  deleteListItem,
   deleteRecurringItem,
   generateShoppingList,
   getCategoryOrder,
+  getCostHistory,
   getRecurringItems,
+  getShoppingList,
   saveRecurringItem,
   setCategoryOrder,
+  setItemChecked,
+  setTotalCost,
 } from "../api";
-import { SaveRecurringItemInput } from "../shopping-list-types";
+import {
+  AddListItemInput,
+  SaveRecurringItemInput,
+  ShoppingList,
+} from "../shopping-list-types";
 
 // Hemmets, så nycklarna bär hem-id — samma skäl som i homeKeys.
 export const shoppingListKeys = {
@@ -25,6 +36,136 @@ export const shoppingListKeys = {
     ["shopping-list", homeId, "category-order"] as const,
   recurring: (homeId: string) =>
     ["shopping-list", homeId, "recurring"] as const,
+  week: (homeId: string, weekStart: IsoDate) =>
+    ["shopping-list", homeId, "week", weekStart] as const,
+  costs: (homeId: string) => ["shopping-list", homeId, "costs"] as const,
+};
+
+/** Veckans lista; data är null när veckan inte har någon lista än. */
+export const useShoppingList = (weekStart: IsoDate) => {
+  const { data: home } = useHome();
+
+  return useQuery({
+    queryKey: shoppingListKeys.week(home?.id ?? "", weekStart),
+    queryFn: home ? () => getShoppingList(home.id, weekStart) : skipToken,
+  });
+};
+
+export const useCostHistory = () => {
+  const { data: home } = useHome();
+
+  return useQuery({
+    queryKey: shoppingListKeys.costs(home?.id ?? ""),
+    queryFn: home ? () => getCostHistory(home.id) : skipToken,
+  });
+};
+
+type ToggleItemInput = {
+  homeId: string;
+  weekStart: IsoDate;
+  id: string;
+  checked: boolean;
+};
+
+const toggleKey = ["shopping-list", "toggle"] as const;
+
+// Optimistisk: i butiken bockar man av snabbt, och en ruta som väntar på
+// servern känns trasig. Listan hämtas om först när den sista avbockningen i
+// en snabb följd är klar — annars kan ett tidigt svar skriva över en senare
+// avbockning med serverns äldre läge, och rutan blinkar tillbaka.
+export const useToggleItem = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    void,
+    PostgrestError,
+    ToggleItemInput,
+    { previous?: ShoppingList | null }
+  >({
+    mutationKey: toggleKey,
+    mutationFn: ({ id, checked }) => setItemChecked(id, checked),
+    onMutate: async ({ homeId, weekStart, id, checked }) => {
+      const key = shoppingListKeys.week(homeId, weekStart);
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = queryClient.getQueryData<ShoppingList | null>(key);
+      queryClient.setQueryData<ShoppingList | null>(key, (list) =>
+        list
+          ? {
+              ...list,
+              items: list.items.map((item) =>
+                item.id === id ? { ...item, checked } : item,
+              ),
+            }
+          : list,
+      );
+      return { previous };
+    },
+    onError: (_error, { homeId, weekStart }, context) => {
+      if (context?.previous !== undefined) {
+        queryClient.setQueryData(
+          shoppingListKeys.week(homeId, weekStart),
+          context.previous,
+        );
+      }
+    },
+    onSettled: (_data, _error, { homeId, weekStart }) => {
+      if (queryClient.isMutating({ mutationKey: toggleKey }) === 1) {
+        return queryClient.invalidateQueries({
+          queryKey: shoppingListKeys.week(homeId, weekStart),
+        });
+      }
+    },
+  });
+};
+
+export const useAddListItem = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, PostgrestError, AddListItemInput>({
+    mutationFn: addListItem,
+    onSuccess: (_data, { homeId, weekStart }) =>
+      queryClient.invalidateQueries({
+        queryKey: shoppingListKeys.week(homeId, weekStart),
+      }),
+  });
+};
+
+export const useDeleteListItem = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    void,
+    PostgrestError,
+    { homeId: string; weekStart: IsoDate; id: string }
+  >({
+    mutationFn: ({ id }) => deleteListItem(id),
+    onSuccess: (_data, { homeId, weekStart }) =>
+      queryClient.invalidateQueries({
+        queryKey: shoppingListKeys.week(homeId, weekStart),
+      }),
+  });
+};
+
+export const useSetTotalCost = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    void,
+    PostgrestError,
+    { homeId: string; weekStart: IsoDate; totalCost: number | null }
+  >({
+    mutationFn: ({ homeId, weekStart, totalCost }) =>
+      setTotalCost(homeId, weekStart, totalCost),
+    onSuccess: (_data, { homeId, weekStart }) =>
+      Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: shoppingListKeys.week(homeId, weekStart),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: shoppingListKeys.costs(homeId),
+        }),
+      ]),
+  });
 };
 
 export const useRecurringItems = () => {
@@ -105,8 +246,9 @@ export const useSetCategoryOrder = () => {
   });
 };
 
-// Det finns ingen fråga för själva listan än; shoppingListKeys.all fångar den
-// när Lista-fliken byggs.
+// Sådden först, som i usePlannedMeals: från Lista-fliken kan man generera en
+// vecka som ingen öppnat i veckoplanen, och då saknas de stående måltiderna.
+// No-op för redan sådda veckor.
 export const useGenerateShoppingList = () => {
   const queryClient = useQueryClient();
 
@@ -115,9 +257,17 @@ export const useGenerateShoppingList = () => {
     PostgrestError,
     { homeId: string; weekStart: IsoDate }
   >({
-    mutationFn: ({ homeId, weekStart }) =>
-      generateShoppingList(homeId, weekStart),
+    mutationFn: async ({ homeId, weekStart }) => {
+      await seedStandingWeeks(weekStart, addDays(weekStart, 6));
+      return generateShoppingList(homeId, weekStart);
+    },
     onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: shoppingListKeys.all }),
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: shoppingListKeys.all }),
+        // Sådden kan ha lagt till måltider. Nyckeln skrivs ut i stället för
+        // planKeys.all: use-plan importerar härifrån, och en cirkulär import
+        // av konstanter är odefinierad vid laddning.
+        queryClient.invalidateQueries({ queryKey: ["plan"] }),
+      ]),
   });
 };

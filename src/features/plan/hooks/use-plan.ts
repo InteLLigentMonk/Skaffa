@@ -3,7 +3,9 @@ import { copyPublicRecipe } from "@/features/recipes/api";
 import { RecipeScope } from "@/features/recipes/recipe-types";
 import { IsoDate } from "@/lib/dates";
 import { PostgrestError } from "@supabase/supabase-js";
+import { shoppingListKeys } from "@/features/shopping-list/hooks/use-shopping-list";
 import {
+  QueryClient,
   skipToken,
   useMutation,
   useQuery,
@@ -34,6 +36,14 @@ export const planKeys = {
   slots: (homeId: string) => ["plan", homeId, "slots"] as const,
   standing: (homeId: string) => ["plan", homeId, "standing"] as const,
 };
+
+// Inköpslistan också: en trigger stämplar veckans lista när planen ändras
+// (plan_changed_at), och Lista-fliken ska visa "Planen har ändrats" direkt.
+const invalidatePlan = (queryClient: QueryClient) =>
+  Promise.all([
+    queryClient.invalidateQueries({ queryKey: planKeys.all }),
+    queryClient.invalidateQueries({ queryKey: shoppingListKeys.all }),
+  ]);
 
 // Sådden först: en vecka som öppnas för första gången ska visa sina stående
 // måltider redan i samma läsning. För redan sådda veckor är den en no-op.
@@ -66,7 +76,7 @@ export const useSaveStandingMeal = () => {
 
   return useMutation<string, PostgrestError, SaveStandingMealInput>({
     mutationFn: saveStandingMeal,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: planKeys.all }),
+    onSuccess: () => invalidatePlan(queryClient),
   });
 };
 
@@ -78,7 +88,7 @@ export const useDeleteStandingMeal = () => {
     // Inte awaitad: skärmen går tillbaka direkt. Annars hinner den refetchade
     // listan sakna regeln och formuläret blinka "finns inte längre" först.
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: planKeys.all });
+      invalidatePlan(queryClient);
     },
   });
 };
@@ -127,7 +137,7 @@ export const usePlanRecipe = () => {
     },
     onSuccess: (_id, { scope }) =>
       Promise.all([
-        queryClient.invalidateQueries({ queryKey: planKeys.all }),
+        invalidatePlan(queryClient),
         // En ny kopia ska synas i Hemmets recept. Nyckeln skrivs ut i stället
         // för recipeKeys.lists: use-recipes importerar planKeys härifrån, och
         // en cirkulär import av konstanter är odefinierad vid laddning.
@@ -144,7 +154,7 @@ export const useUpdatePlannedMeal = () => {
 
   return useMutation<string, PostgrestError, UpdatePlannedMealInput>({
     mutationFn: updatePlannedMeal,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: planKeys.all }),
+    onSuccess: () => invalidatePlan(queryClient),
   });
 };
 
@@ -153,6 +163,6 @@ export const useDeletePlannedMeal = () => {
 
   return useMutation<void, PostgrestError, string>({
     mutationFn: deletePlannedMeal,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: planKeys.all }),
+    onSuccess: () => invalidatePlan(queryClient),
   });
 };

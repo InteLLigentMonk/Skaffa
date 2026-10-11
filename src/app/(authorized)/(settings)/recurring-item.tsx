@@ -1,8 +1,8 @@
-import SearchBar from "@/components/search-bar";
 import { useHome } from "@/features/home/hooks/use-home";
+import AmountField from "@/features/ingredients/components/amount-field";
 import Category from "@/features/ingredients/components/category";
+import IngredientSearch from "@/features/ingredients/components/ingredient-search";
 import NewIngredientForm from "@/features/ingredients/components/new-ingredient-form";
-import { useIngredients } from "@/features/ingredients/hooks/use-ingredients";
 import {
   CATEGORY_LABELS,
   PickerIngredient,
@@ -20,31 +20,21 @@ import {
   isValidAmount,
   parseAmount,
   toBase,
-  UNIT_LABELS,
   UnitCode,
   unitsFor,
 } from "@/lib/units";
-import { StyledIonicons } from "@/utils/helpers";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import {
   Button,
-  Chip,
   FieldError,
-  Input,
   Label,
-  ListGroup,
-  Separator,
   Spinner,
   Surface,
-  TextField,
   Typography,
 } from "heroui-native";
-import { Fragment, useState } from "react";
+import { useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, View } from "react-native";
 import { useHeaderHeight } from "expo-router/build/react-navigation";
-
-// Få nog att mängdfälten syns under listan utan att man scrollar.
-const MAX_SHOWN = 6;
 
 // Se kommentaren vid keyboardBehavior i manage-home.tsx.
 const keyboardBehavior = Platform.OS === "ios" ? "padding" : "height";
@@ -223,6 +213,7 @@ const RecurringItemForm = ({
             <>
               <IngredientSearch
                 takenIds={takenIds}
+                takenLabel="Redan en återkommande vara"
                 onPick={pick}
                 onCreate={setCreateName}
               />
@@ -259,39 +250,15 @@ const RecurringItemForm = ({
 
         {/* ---- Mängd ---- */}
         {ingredient && !isPicking && (
-          <View className="gap-2">
-            <Label>Mängd (valfri)</Label>
-            <TextField isInvalid={amountInvalid}>
-              <Input
-                value={amountText}
-                onChangeText={setAmountText}
-                keyboardType="decimal-pad"
-                placeholder="Ingen mängd"
-              />
-              <FieldError>Ange ett tal större än noll</FieldError>
-            </TextField>
-            {units.length > 1 && (
-              <View className="flex-row flex-wrap gap-2">
-                {units.map((u) => {
-                  const isSelected = u === unit;
-                  return (
-                    <Chip
-                      key={u}
-                      variant={isSelected ? "soft" : "secondary"}
-                      color={isSelected ? "accent" : "default"}
-                      onPress={() => setPickedUnit(u)}
-                      accessibilityState={{ selected: isSelected }}
-                    >
-                      <Chip.Label>{UNIT_LABELS[u]}</Chip.Label>
-                    </Chip>
-                  );
-                })}
-              </View>
-            )}
-            <Typography.Paragraph type="body-xs" color="muted">
-              Utan mängd hamnar varan på listan som en påminnelse.
-            </Typography.Paragraph>
-          </View>
+          <AmountField
+            value={amountText}
+            onChange={setAmountText}
+            units={units}
+            unit={unit}
+            onUnitChange={setPickedUnit}
+            isInvalid={amountInvalid}
+            hint="Utan mängd hamnar varan på listan som en påminnelse."
+          />
         )}
 
         <FieldError isInvalid={!!save.error}>
@@ -366,105 +333,5 @@ const RecurringItemForm = ({
   );
 };
 
-// Ingredienserna är redan laddade i sin helhet (useIngredients), så sökningen
-// filtrerar lokalt — som IngredientsPicker i receptformuläret.
-const IngredientSearch = ({
-  takenIds,
-  onPick,
-  onCreate,
-}: {
-  takenIds: Set<string>;
-  onPick: (ingredient: PickerIngredient) => void;
-  onCreate: (name: string) => void;
-}) => {
-  const ingredients = useIngredients();
-  const [term, setTerm] = useState("");
-
-  const q = term.trim().toLocaleLowerCase("sv");
-  const all = ingredients.data ?? [];
-  const matches = all.filter((i) =>
-    i.name.toLocaleLowerCase("sv").includes(q),
-  );
-  const shown = matches.slice(0, MAX_SHOWN);
-  const hasExactMatch = all.some(
-    (i) => i.name.toLocaleLowerCase("sv") === q,
-  );
-
-  return (
-    <View className="gap-2">
-      <SearchBar
-        value={term}
-        onChange={setTerm}
-        placeholder="Sök ingrediens, t.ex. mjölk"
-      />
-
-      {q.length > 0 && !hasExactMatch && (
-        <Button
-          variant="tertiary"
-          className="rounded-2xl border border-dashed border-accent bg-accent-soft"
-          onPress={() => onCreate(term.trim())}
-        >
-          <StyledIonicons name="add" size={20} className="text-accent" />
-          <Typography.Paragraph className="text-accent">
-            Skapa ”{term.trim()}”
-          </Typography.Paragraph>
-        </Button>
-      )}
-
-      {ingredients.isPending ? (
-        <View className="items-center py-6">
-          <Spinner />
-        </View>
-      ) : ingredients.isError ? (
-        <View className="items-center gap-2 py-4">
-          <Typography.Paragraph color="muted">
-            Kunde inte hämta ingredienserna.
-          </Typography.Paragraph>
-          <Button
-            variant="secondary"
-            size="sm"
-            onPress={() => ingredients.refetch()}
-          >
-            <Button.Label>Försök igen</Button.Label>
-          </Button>
-        </View>
-      ) : shown.length > 0 ? (
-        <ListGroup>
-          {shown.map((ingredient, i) => {
-            const isTaken = takenIds.has(ingredient.id);
-            return (
-              <Fragment key={ingredient.id}>
-                {i > 0 && <Separator className="mx-4" />}
-                <ListGroup.Item
-                  disabled={isTaken}
-                  className={isTaken ? "opacity-50" : ""}
-                  onPress={() => onPick(ingredient)}
-                >
-                  <ListGroup.ItemPrefix>
-                    <Category category={ingredient.category} />
-                  </ListGroup.ItemPrefix>
-                  <ListGroup.ItemContent>
-                    <ListGroup.ItemTitle>{ingredient.name}</ListGroup.ItemTitle>
-                    <ListGroup.ItemDescription>
-                      {isTaken
-                        ? "Redan en återkommande vara"
-                        : CATEGORY_LABELS[ingredient.category]}
-                    </ListGroup.ItemDescription>
-                  </ListGroup.ItemContent>
-                </ListGroup.Item>
-              </Fragment>
-            );
-          })}
-        </ListGroup>
-      ) : null}
-
-      {matches.length > MAX_SHOWN && (
-        <Typography.Paragraph type="body-xs" color="muted" align="center">
-          Visar {MAX_SHOWN} av {matches.length}. Sök för att hitta fler.
-        </Typography.Paragraph>
-      )}
-    </View>
-  );
-};
 
 export default RecurringItemScreen;

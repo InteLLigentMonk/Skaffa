@@ -101,7 +101,13 @@ const PlanScreen = () => {
     if (!home) return;
     generate.mutate(
       { homeId: home.id, weekStart },
-      { onSuccess: () => router.navigate("/(authorized)/(shopping-list)") },
+      {
+        onSuccess: () =>
+          router.navigate({
+            pathname: "/(authorized)/(shopping-list)",
+            params: { week: weekStart },
+          }),
+      },
     );
   };
 
