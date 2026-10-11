@@ -19,10 +19,17 @@ const IngredientsPicker = ({
   onToggle,
   onCreateNew,
   selectedIds,
+  hiddenCategories = [],
 }: IngredientsPickerProps) => {
   const [searchTerm, setSearchTerm] = useState("");
   const q = searchTerm.trim().toLocaleLowerCase();
-  const filtered = ingredients.filter((i) => i.name.toLowerCase().includes(q));
+  const filtered = ingredients.filter(
+    (i) =>
+      !hiddenCategories.includes(i.category) &&
+      i.name.toLowerCase().includes(q),
+  );
+  // Mot hela listan, även de dolda: annars erbjöds "Skapa ”Diskmedel”" i ett
+  // recept, och hemmet fick en egen dubblett av fröradens hushållsvara.
   const hasExactMatch = ingredients.some((i) => i.name.toLowerCase() === q);
   const showCreate = q.length > 0 && !hasExactMatch;
 

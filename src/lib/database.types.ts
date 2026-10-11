@@ -907,6 +907,7 @@ export type Database = {
       create_home: { Args: { _name: string }; Returns: string }
       current_home_id: { Args: never; Returns: string }
       delete_home: { Args: { _home_id: string }; Returns: undefined }
+      delete_standing_meal: { Args: { _id: string }; Returns: undefined }
       duplicate_recipe: { Args: { _recipe_id: string }; Returns: string }
       enqueue_storage_delete: {
         Args: { _bucket: string; _path: string }
@@ -951,6 +952,16 @@ export type Database = {
           _prep_minutes: number
           _servings: number
           _steps: Json
+        }
+        Returns: string
+      }
+      save_standing_meal: {
+        Args: {
+          _id: string
+          _recipe_id: string
+          _servings: number
+          _slot: Database["public"]["Enums"]["meal_slot"]
+          _weekdays: number[]
         }
         Returns: string
       }
@@ -1006,6 +1017,10 @@ export type Database = {
       }
       seed_standing_meals: {
         Args: { _home_id: string; _week_start: string }
+        Returns: undefined
+      }
+      seed_standing_weeks: {
+        Args: { _from: string; _to: string }
         Returns: undefined
       }
       set_recipe_favorite: {

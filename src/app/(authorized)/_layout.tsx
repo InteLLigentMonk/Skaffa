@@ -80,13 +80,13 @@ const TabsLayout = () => {
           }}
         />
         <Tabs.Screen
-          name="(user)"
+          name="(settings)"
           options={{
-            title: "Användare",
+            title: "Inställningar",
             headerShown: false,
             tabBarIcon: ({ color, size, focused }) => (
               <Ionicons
-                name={focused ? "person-circle" : "person-circle-outline"}
+                name={focused ? "settings" : "settings-outline"}
                 color={color}
                 size={size}
               />

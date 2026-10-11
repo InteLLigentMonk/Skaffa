@@ -108,4 +108,6 @@ export type IngredientsPickerProps = {
   onToggle: (ingredient: PickerIngredient) => void;
   onCreateNew: (name: string) => void;
   selectedIds: Set<string>;
+  /** Visas inte i listan, men räknas när "Skapa …" avgör om namnet finns. */
+  hiddenCategories?: IngredientCategory[];
 };

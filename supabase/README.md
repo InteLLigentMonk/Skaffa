@@ -27,6 +27,8 @@ när mer än en person rör databasen.
 | `20261008120000_recipe_detail.sql` | `recipes.copied_from`, RPC `copy_public_recipe`, `duplicate_recipe`, `set_recipe_favorite` och `plan_meal` |
 | `20261009120000_save_recipe.sql` | RPC `save_recipe` (upsert av receptet med ingredienser, steg och bild), check-constraint på `recipes.image_path` |
 | `20261009130000_recipe_image_sweep.sql` | `sweep_orphan_recipe_images` (bara service role) för bilder som aldrig sparades på ett recept; `create_recipe` tas bort |
+| `20261011120000_standing_meals.sql` | RPC `save_standing_meal`, `delete_standing_meal` (når redan sådda veckor från i dag) och `seed_standing_weeks`; `seed_standing_meals` hoppar över passerade dagar |
+| `20261011130000_ingredient_name_vs_seed.sql` | Trigger: en hemingrediens får inte heta samma sak som en frö-ingrediens (indexet gäller bara per ägare) |
 
 Enheter fungerar så här: ingrediensen bär ett **måttslag** (`dimension`), inte ett
 mått. Användaren väljer enhet per receptrad, och `amount_base` härleds av en
