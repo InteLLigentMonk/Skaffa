@@ -30,7 +30,7 @@ import {
   Typography,
 } from "heroui-native";
 import { useState } from "react";
-import { ScrollView, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 
 const errorText = (
   error: { code?: string; message: string } | null,
@@ -227,21 +227,33 @@ const StandingMealForm = ({ initial }: { initial?: StandingMeal }) => {
             );
           })}
         </View>
-        <View className="flex-row justify-between gap-1">
+        {/* Egna knappar i stället för Chip: sju i bredd ger runt 43 px var på
+            en smal telefon, och Chips padding-inline går inte att skriva över
+            med px-0 — "Mån" bröts eller blev "…". Samma färger som Chip. */}
+        <View className="flex-row gap-1">
           {WEEKDAYS.map(({ day, short }) => {
             const isSelected = weekdays.includes(day);
             return (
-              <Chip
+              <Pressable
                 key={day}
-                size="lg"
-                className="flex-1 justify-center"
-                variant={isSelected ? "soft" : "secondary"}
-                color={isSelected ? "accent" : "default"}
+                className={`h-10 flex-1 items-center justify-center rounded-3xl ${isSelected ? "bg-accent-soft" : "bg-default"}`}
                 onPress={() => toggleDay(day)}
+                accessibilityRole="button"
+                accessibilityLabel={short}
                 accessibilityState={{ selected: isSelected }}
               >
-                <Chip.Label>{short}</Chip.Label>
-              </Chip>
+                <Typography.Paragraph
+                  type="body-sm"
+                  numberOfLines={1}
+                  className={
+                    isSelected
+                      ? "text-accent-soft-foreground"
+                      : "text-default-soft-foreground"
+                  }
+                >
+                  {short}
+                </Typography.Paragraph>
+              </Pressable>
             );
           })}
         </View>

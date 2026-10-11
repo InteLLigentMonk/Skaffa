@@ -15,14 +15,21 @@ type Props = {
   onPick: (recipe: { id: string; name: string }) => void;
 };
 
+// Få nog att Måltid och Dagar syns under listan utan att man scrollar.
+const MAX_SHOWN = 6;
+
 // Bara hemmets recept: planned_meals och standing_meals kan bara peka på dem.
-// Visar första sidan och låter sökningen göra resten, så väljaren kan ligga
-// i en vanlig ScrollView utan en nästlad lista.
+// Visar ett fåtal och låter sökningen göra resten, så väljaren kan ligga i en
+// vanlig ScrollView utan en nästlad lista.
 const RecipePicker = ({ onPick }: Props) => {
   const [term, setTerm] = useState("");
   const query = useDebouncedValue(term.trim());
   const search = useRecipeSearch("home", { query, quick: false, diet: null });
-  const recipes = search.data?.pages[0] ?? [];
+  // Kapas i klienten i stället för ett eget _limit: frågan blir då samma som
+  // receptflikens och delar dess cache.
+  const firstPage = search.data?.pages[0] ?? [];
+  const recipes = firstPage.slice(0, MAX_SHOWN);
+  const hasMore = firstPage.length > MAX_SHOWN || search.hasNextPage;
 
   return (
     <View className="gap-2">
@@ -67,9 +74,11 @@ const RecipePicker = ({ onPick }: Props) => {
         </ListGroup>
       )}
 
-      {search.hasNextPage && (
+      {hasMore && (
         <Typography.Paragraph type="body-xs" color="muted" align="center">
-          Visar de första {recipes.length}. Sök för att hitta fler.
+          {query
+            ? `Visar de ${MAX_SHOWN} bästa träffarna.`
+            : `Visar de ${MAX_SHOWN} senaste. Sök för att hitta fler.`}
         </Typography.Paragraph>
       )}
     </View>
