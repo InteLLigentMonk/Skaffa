@@ -4,6 +4,7 @@ import {
   fromIsoDate,
   IsoDate,
   today,
+  toIsoDate,
   weekMonday,
 } from "@/lib/dates";
 
@@ -46,6 +47,16 @@ export const planWeeks = (): IsoDate[] => {
 };
 
 /**
+ * Hela det planerbara intervallet, från denna veckas måndag till sista
+ * veckans söndag. Veckoplanen och hemsidan frågar efter exakt det här, så de
+ * delar samma fråga och cache.
+ */
+export const planRange = (): { from: IsoDate; to: IsoDate } => {
+  const weeks = planWeeks();
+  return { from: weeks[0], to: addDays(weeks[weeks.length - 1], 6) };
+};
+
+/**
  * Samma veckodag som `date`, fast i veckan som börjar `monday`. Hamnar den
  * före idag blir det idag — passerade dagar går inte att planera.
  */
@@ -63,8 +74,40 @@ export type PlannedMeal = {
   servings: number;
   recipeId: string;
   recipeName: string;
+  /** Receptets tillagningstid; visas på hemsidans hero-kort. */
+  prepMinutes: number | null;
   imagePath: string | null;
   imageUrl: string | null;
+};
+
+// Ungefär när varje måltid är över, i hel timme. Avgör vilken måltid
+// hemsidan visar som "Härnäst": en måltid räknas som kommande tills dess.
+const SLOT_ENDS_AT: Record<MealSlot, number> = {
+  frukost: 10,
+  brunch: 12,
+  mellanmal_1: 11,
+  lunch: 14,
+  mellanmal_2: 16,
+  middag: 21,
+  snacks: 24,
+};
+
+/**
+ * Dagens första måltid som inte är över än, annars morgondagens första.
+ * meals ska vara sorterade på datum och måltid, som getPlannedMeals ger dem.
+ */
+export const nextMeal = (
+  meals: PlannedMeal[],
+  now = new Date(),
+): { meal: PlannedMeal; isTomorrow: boolean } | null => {
+  const day = toIsoDate(now);
+  const upcoming = meals.find(
+    (meal) => meal.date === day && SLOT_ENDS_AT[meal.slot] > now.getHours(),
+  );
+  if (upcoming) return { meal: upcoming, isTomorrow: false };
+
+  const tomorrow = meals.find((meal) => meal.date === addDays(day, 1));
+  return tomorrow ? { meal: tomorrow, isTomorrow: true } : null;
 };
 
 /** ISO-veckodag som i standing_meals.weekdays: 1 = måndag … 7 = söndag. */
