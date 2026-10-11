@@ -9,8 +9,6 @@ const HomeLayout = () => {
           headerShown: false,
         }}
       />
-      <Stack.Screen name="manage-home" options={{ title: "Hantera hemmet" }} />
-      <Stack.Screen name="invite-to-home" options={{ title: "Bjud in" }} />
     </Stack>
   );
 };

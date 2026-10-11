@@ -68,6 +68,7 @@ const RootNavigator = () => {
           }}
         />
         <Stack.Screen name="recipe/[id]" options={{ headerShown: false }} />
+        <Stack.Screen name="account" options={{ headerShown: false }} />
         <Stack.Screen name="create" />
         <Stack.Screen name="new-product" />
       </Stack.Protected>

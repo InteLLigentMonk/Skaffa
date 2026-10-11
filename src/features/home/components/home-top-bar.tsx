@@ -85,7 +85,9 @@ export default function HomeTopBar({
               </View>
             </Menu.Item>
             <Separator className="mx-2 my-2 opacity-75" />
-            <Menu.Item>
+            {/* Hemmets inställningar ligger i Inställningar-fliken; menyn
+                rymmer bara det som hör till kontot. */}
+            <Menu.Item onPress={() => router.push("/account")}>
               <View className="flex flex-row items-center gap-4">
                 <StyledIonicons
                   name="person-outline"
@@ -93,18 +95,6 @@ export default function HomeTopBar({
                   className="text-foreground"
                 />
                 <Menu.ItemTitle>Kontoinställningar</Menu.ItemTitle>
-              </View>
-            </Menu.Item>
-            {/* Att lämna hemmet ligger inne på manage-home, bakom en
-                bekräftelse — inte som en menypost ett felklick når. */}
-            <Menu.Item onPress={() => router.push("/manage-home")}>
-              <View className="flex flex-row items-center gap-4">
-                <StyledIonicons
-                  name="home-outline"
-                  size={24}
-                  className="text-foreground"
-                />
-                <Menu.ItemTitle>Hantera hemmet</Menu.ItemTitle>
               </View>
             </Menu.Item>
             <Separator className="mx-2 my-2 opacity-75" />
@@ -115,7 +105,7 @@ export default function HomeTopBar({
                   size={24}
                   className="text-danger"
                 />
-                <Menu.ItemTitle>Log Out</Menu.ItemTitle>
+                <Menu.ItemTitle>Logga ut</Menu.ItemTitle>
               </View>
             </Menu.Item>
           </Menu.Content>

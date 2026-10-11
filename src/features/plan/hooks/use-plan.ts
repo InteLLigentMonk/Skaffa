@@ -9,7 +9,14 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { getPlannedMeals, getVisibleSlots, planMeal, PlanMealInput } from "../api";
+import {
+  getPlannedMeals,
+  getVisibleSlots,
+  planMeal,
+  PlanMealInput,
+  setVisibleSlots,
+} from "../api";
+import { MealSlot } from "../plan-types";
 
 // Planen är hemmets, så nycklarna bär hem-id — samma skäl som i homeKeys.
 // planKeys.all invaliderar alla intervall på en gång efter en skrivning.
@@ -35,6 +42,20 @@ export const useVisibleSlots = () => {
   return useQuery({
     queryKey: planKeys.slots(home?.id ?? ""),
     queryFn: home ? () => getVisibleSlots(home.id) : skipToken,
+  });
+};
+
+export const useSetVisibleSlots = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    MealSlot[],
+    PostgrestError,
+    { homeId: string; slots: MealSlot[] }
+  >({
+    mutationFn: ({ homeId, slots }) => setVisibleSlots(homeId, slots),
+    onSuccess: (slots, { homeId }) =>
+      queryClient.setQueryData(planKeys.slots(homeId), slots),
   });
 };
 

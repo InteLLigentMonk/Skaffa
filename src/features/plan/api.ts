@@ -40,6 +40,24 @@ export async function getVisibleSlots(homeId: string): Promise<MealSlot[]> {
   return sortSlots(data.visible_slots);
 }
 
+// .select().single() därför att en update som RLS filtrerar bort inte är ett
+// fel i PostgREST — den träffar bara noll rader. Utan den skulle ett tyst
+// misslyckande se ut som en lyckad sparning.
+export async function setVisibleSlots(
+  homeId: string,
+  slots: MealSlot[],
+): Promise<MealSlot[]> {
+  const { data, error } = await supabase
+    .from("home_settings")
+    .update({ visible_slots: sortSlots(slots) })
+    .eq("home_id", homeId)
+    .select("visible_slots")
+    .single();
+
+  if (error) throw error;
+  return sortSlots(data.visible_slots);
+}
+
 export type PlanMealInput = {
   recipeId: string;
   date: IsoDate;
