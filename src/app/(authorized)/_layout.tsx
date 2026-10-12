@@ -93,7 +93,6 @@ const TabsLayout = () => {
             ),
           }}
         />
-        <Tabs.Screen name="(products)" options={{ href: null }} />
       </Tabs>
     </AuthorizedUserProvider>
   );

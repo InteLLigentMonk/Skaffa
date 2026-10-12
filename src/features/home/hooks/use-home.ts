@@ -14,6 +14,7 @@ import {
   getHomeMembers,
   leaveHome,
   redeemInvite,
+  removeMember,
   renameHome,
   setMemberRole,
 } from "../api";
@@ -128,4 +129,16 @@ export const useDeleteHome = () => {
     mutationFn: deleteHome,
     onSuccess: () => discardHomeData(queryClient),
   });
+};
+
+export const useRemoveMember = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, PostgrestError, { homeId: string; userId: string }>(
+    {
+      mutationFn: removeMember,
+      onSuccess: (_data, { homeId }) =>
+        queryClient.invalidateQueries({ queryKey: homeKeys.members(homeId) }),
+    },
+  );
 };

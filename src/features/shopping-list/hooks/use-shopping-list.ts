@@ -22,6 +22,7 @@ import {
   setCategoryOrder,
   setItemChecked,
   setTotalCost,
+  updateManualItem,
 } from "../api";
 import {
   AddListItemInput,
@@ -139,6 +140,26 @@ export const useDeleteListItem = () => {
     { homeId: string; weekStart: IsoDate; id: string }
   >({
     mutationFn: ({ id }) => deleteListItem(id),
+    onSuccess: (_data, { homeId, weekStart }) =>
+      queryClient.invalidateQueries({
+        queryKey: shoppingListKeys.week(homeId, weekStart),
+      }),
+  });
+};
+
+export const useUpdateManualItem = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    void,
+    PostgrestError,
+    {
+      homeId: string;
+      weekStart: IsoDate;
+      patch: Parameters<typeof updateManualItem>[0];
+    }
+  >({
+    mutationFn: ({ patch }) => updateManualItem(patch),
     onSuccess: (_data, { homeId, weekStart }) =>
       queryClient.invalidateQueries({
         queryKey: shoppingListKeys.week(homeId, weekStart),

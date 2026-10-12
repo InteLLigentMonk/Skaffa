@@ -3,7 +3,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createIngredient,
   CreateIngredientInput,
+  deleteIngredient,
   listIngredients,
+  renameIngredient,
   setIngredientDensity,
 } from "../api";
 import { PickerIngredient } from "../ingredient-types";
@@ -42,6 +44,28 @@ export const useCreateIngredient = () => {
 
   return useMutation<PickerIngredient, PostgrestError, CreateIngredientInput>({
     mutationFn: createIngredient,
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ingredientKeys.all }),
+  });
+};
+
+// Namnet syns i recept, veckoplan och inköpslistor under nycklar som inte bär
+// ingrediens-id. Ett namnbyte är sällsynt, så invalidera allt hellre än att
+// räkna upp varje feature.
+export const useRenameIngredient = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, PostgrestError, { id: string; name: string }>({
+    mutationFn: renameIngredient,
+    onSuccess: () => queryClient.invalidateQueries(),
+  });
+};
+
+export const useDeleteIngredient = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, PostgrestError, string>({
+    mutationFn: deleteIngredient,
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ingredientKeys.all }),
   });

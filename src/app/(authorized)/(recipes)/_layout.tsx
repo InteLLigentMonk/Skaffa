@@ -7,7 +7,10 @@ const RecipesLayout = () => {
         name="index"
         options={{ title: "Recept", headerShown: false }}
       />
-      <Stack.Screen name="new-recipe" options={{ title: "Nytt recept" }} />
+      <Stack.Screen
+        name="ingredients"
+        options={{ title: "Egna ingredienser" }}
+      />
     </Stack>
   );
 };

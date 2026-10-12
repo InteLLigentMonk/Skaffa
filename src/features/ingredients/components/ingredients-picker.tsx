@@ -1,5 +1,8 @@
 import SearchBar from "@/components/search-bar";
-import { IngredientsPickerProps } from "@/features/ingredients/ingredient-types";
+import {
+  CATEGORY_LABELS,
+  IngredientsPickerProps,
+} from "@/features/ingredients/ingredient-types";
 import { StyledIonicons } from "@/utils/helpers";
 import {
   Button,
@@ -87,8 +90,7 @@ const IngredientsPicker = ({
                 <View className="flex-1 flex-col gap-1">
                   <Typography.Heading type="h4">{item.name}</Typography.Heading>
                   <Typography.Paragraph type="body-sm" color="muted">
-                    {item.category.charAt(0).toUpperCase() +
-                      item.category.slice(1)}
+                    {CATEGORY_LABELS[item.category]}
                   </Typography.Paragraph>
                 </View>
               </View>
@@ -96,6 +98,8 @@ const IngredientsPicker = ({
                 isIconOnly
                 size="sm"
                 variant={isSelected ? "primary" : "ghost"}
+                accessibilityLabel={`Välj ${item.name}`}
+                accessibilityState={{ checked: isSelected }}
                 onPress={() => onToggle(item)}
                 className={`rounded-full border-2 ${isSelected ? "border-accent" : "border-border"}`}
               >

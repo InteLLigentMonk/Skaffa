@@ -57,6 +57,21 @@ const RecurringItemScreen = () => {
     );
   }
 
+  // Före "finns inte längre": utan data vet vi inte om den finns.
+  if (id && recurring.isError) {
+    return (
+      <View className="flex-1 items-center justify-center gap-4 p-8">
+        <Stack.Screen options={{ title }} />
+        <Typography.Paragraph color="muted" align="center">
+          Kunde inte hämta varan.
+        </Typography.Paragraph>
+        <Button variant="secondary" onPress={() => recurring.refetch()}>
+          <Button.Label>Försök igen</Button.Label>
+        </Button>
+      </View>
+    );
+  }
+
   // Borttagen av någon annan i hemmet medan listan var öppen.
   if (id && !item) {
     return (

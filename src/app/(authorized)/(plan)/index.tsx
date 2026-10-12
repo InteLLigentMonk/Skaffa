@@ -38,7 +38,7 @@ import {
   Typography,
 } from "heroui-native";
 import { useState } from "react";
-import { ScrollView, View } from "react-native";
+import { Alert, RefreshControl, ScrollView, View } from "react-native";
 
 // Vilket ark som är öppet. key ger arket en ny montering per öppning, så
 // varje öppning börjar från början även för samma måltid.
@@ -91,9 +91,32 @@ const PlanScreen = () => {
   };
   const closeSheet = () => setIsSheetOpen(false);
 
+  // Samma skäl som i receptlistan: isRefetching är sant även vid
+  // bakgrundsuppdateringar, och då hade spinnern dykt upp oombedd.
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const refresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([meals.refetch(), visibleSlots.refetch()]);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   const onAction = (meal: PlannedMeal, action: PlannedMealAction) => {
     if (action === "delete") {
-      deleteMeal.mutate(meal.id);
+      Alert.alert(
+        `Ta bort ${meal.recipeName}?`,
+        "Måltiden försvinner från veckoplanen.",
+        [
+          { text: "Avbryt", style: "cancel" },
+          {
+            text: "Ta bort",
+            style: "destructive",
+            onPress: () => deleteMeal.mutate(meal.id),
+          },
+        ],
+      );
       return;
     }
     openSheet({ kind: action, meal, key: Date.now() });
@@ -144,6 +167,9 @@ const PlanScreen = () => {
           contentContainerClassName="gap-4 px-4 pt-2 pb-28"
           scrollEventThrottle={16}
           onScroll={(e) => setScrolled(e.nativeEvent.contentOffset.y > 0)}
+          refreshControl={
+            <RefreshControl refreshing={isRefreshing} onRefresh={refresh} />
+          }
         >
           <WeekPicker
             value={weekStart}
@@ -220,7 +246,10 @@ const PlanScreen = () => {
       )}
 
       {isEditable && (
-        <Fab onPress={() => openSheet({ kind: "add", slot: null, key: Date.now() })} />
+        <Fab
+          accessibilityLabel="Lägg till måltid"
+          onPress={() => openSheet({ kind: "add", slot: null, key: Date.now() })}
+        />
       )}
 
       {sheet?.kind === "add" && (

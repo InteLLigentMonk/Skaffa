@@ -1,5 +1,6 @@
 import PlanMealSheet from "@/features/plan/components/plan-meal-sheet";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Alert } from "react-native";
 import { useRecipe } from "../hooks/use-recipes";
 import { RecipeCardData, RecipeScope } from "../recipe-types";
 
@@ -18,6 +19,22 @@ const RecipeListPlanSheet = ({ recipe, scope, isOpen, onClose }: Props) => {
   const detail = useRecipe(scope, recipe.id);
   const [servings, setServings] = useState<number | null>(null);
   const value = servings ?? detail.data?.servings;
+
+  // Utan portioner öppnas arket aldrig, så ett misslyckat hämtande hade
+  // annars sett ut som att trycket inte gjorde något. Beroende på isOpen så
+  // att ett nytt försök på samma recept säger till igen.
+  const failed = detail.isError && value === undefined;
+  useEffect(() => {
+    if (!failed || !isOpen) return;
+    Alert.alert(
+      "Kunde inte öppna veckoplanen",
+      "Receptet gick inte att hämta. Kontrollera anslutningen och försök igen.",
+    );
+    onClose();
+    // Komponenten ligger kvar monterad (samma key) om man trycker på samma
+    // recept igen, och då hämtar useRecipe inte om av sig själv.
+    detail.refetch();
+  }, [failed, isOpen, onClose, detail]);
 
   if (value === undefined) return null;
 

@@ -5,12 +5,15 @@ import HomeTopBar from "@/features/home/components/home-top-bar";
 import PendingInviteBanner from "@/features/home/components/pending-invite-banner";
 import { usePlannedMeals } from "@/features/plan/hooks/use-plan";
 import { nextMeal, planRange } from "@/features/plan/plan-types";
+import { shoppingListKeys } from "@/features/shopping-list/hooks/use-shopping-list";
 import { today } from "@/lib/dates";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button, Spinner, Typography } from "heroui-native";
 import { useState } from "react";
-import { ScrollView, View } from "react-native";
+import { RefreshControl, ScrollView, View } from "react-native";
 
 const HomeIndex = () => {
+  const queryClient = useQueryClient();
   const [scrolled, setScrolled] = useState(false);
 
   // Hela planens intervall, inte bara idag: samma nyckel som veckoplanen, så
@@ -20,6 +23,21 @@ const HomeIndex = () => {
 
   const all = meals.data ?? [];
   const todays = all.filter((meal) => meal.date === today());
+
+  // Eget tillstånd i stället för isRefetching, se receptlistan. Inköpsraden
+  // längst ner har en egen fråga — den ska följa med i samma drag.
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const refresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await Promise.all([
+        meals.refetch(),
+        queryClient.invalidateQueries({ queryKey: shoppingListKeys.all }),
+      ]);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   return (
     <View className="flex-1 gap-0 pt-safe-offset-2">
@@ -44,6 +62,9 @@ const HomeIndex = () => {
           onScroll={(e) => {
             setScrolled(e.nativeEvent.contentOffset.y > 0);
           }}
+          refreshControl={
+            <RefreshControl refreshing={isRefreshing} onRefresh={refresh} />
+          }
         >
           <HomeHero next={nextMeal(all)} />
           <HomeMeals meals={todays} />

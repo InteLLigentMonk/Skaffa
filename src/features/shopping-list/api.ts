@@ -228,6 +228,23 @@ export async function deleteListItem(id: string) {
   if (error) throw error;
 }
 
+// Bara manuella rader redigeras: en genererad rad skrivs över av nästa
+// generering, så .eq på source är en extra spärr utöver att UI:t döljer valet,
+// och .select() gör en träff på noll rader till ett fel i stället för tyst succé.
+export async function updateManualItem(
+  input: { id: string } & ({ name: string } | { amount: number | null }),
+) {
+  const { id, ...patch } = input;
+  const { error } = await supabase
+    .from("shopping_list_items")
+    .update(patch)
+    .eq("id", id)
+    .eq("source", "manual")
+    .select("id")
+    .single();
+  if (error) throw error;
+}
+
 /** null tar bort beloppet; veckan räknas då inte med i snittet. */
 export async function setTotalCost(
   homeId: string,

@@ -14,10 +14,18 @@ import {
   useFonts,
 } from "@expo-google-fonts/nunito";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { SplashScreen, Stack, ThemeProvider, useTheme } from "expo-router";
+import { openBugReport } from "@/lib/app-info";
+import {
+  SplashScreen,
+  Stack,
+  ThemeProvider,
+  useTheme,
+  type ErrorBoundaryProps,
+} from "expo-router";
 import * as SystemUI from "expo-system-ui";
 import { HeroUINativeProvider } from "heroui-native";
 import { useEffect } from "react";
+import { Pressable, Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "../global.css";
 
@@ -69,8 +77,6 @@ const RootNavigator = () => {
         />
         <Stack.Screen name="recipe/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="account" options={{ headerShown: false }} />
-        <Stack.Screen name="create" />
-        <Stack.Screen name="new-product" />
       </Stack.Protected>
       {/* A recovery link takes over the entire app until a new password is
           set, so the user cannot tab away while the old one is still valid. */}
@@ -97,6 +103,37 @@ const RootNavigator = () => {
     </Stack>
   );
 };
+
+// Fångar render-fel i hela appen. Ersätter RootLayout när den kastar, så inga
+// providers finns här — därför råa RN-komponenter och inte HeroUI, som
+// behöver HeroUINativeProvider. className fungerar ändå (Uniwind är global).
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  return (
+    <View className="flex-1 justify-center gap-4 bg-background p-8 pt-safe-offset-8 pb-safe-offset-8">
+      <Text className="text-center text-2xl font-bold text-foreground">
+        Något gick fel
+      </Text>
+      <Text className="text-center text-muted">
+        Appen stötte på ett oväntat fel. Försök igen, och berätta gärna för oss
+        vad som hände så vi kan rätta det.
+      </Text>
+      <Pressable
+        accessibilityRole="button"
+        onPress={retry}
+        className="items-center rounded-2xl bg-accent px-4 py-3"
+      >
+        <Text className="font-semibold text-accent-foreground">Försök igen</Text>
+      </Pressable>
+      <Pressable
+        accessibilityRole="button"
+        onPress={() => openBugReport(error.message)}
+        className="items-center rounded-2xl px-4 py-3"
+      >
+        <Text className="text-foreground">Rapportera felet</Text>
+      </Pressable>
+    </View>
+  );
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
