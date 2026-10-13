@@ -18,7 +18,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.Skaffa",
+      "package": "nu.skaffa.app",
       "softwareKeyboardLayoutMode": "resize"
     },
     "web": {
@@ -48,6 +48,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "1914b705-fcca-43f7-9009-1e14880dd6da"
+      }
     }
   }
 }

@@ -5,7 +5,7 @@ import { Alert, Platform } from "react-native";
 
 // Platshållare — fyll i innan release. Integritetspolicyn krävs av både
 // App Store och Google Play eftersom appen har konton.
-export const SUPPORT_EMAIL = "support@example.com";
+export const SUPPORT_EMAIL = "tobias.vinther88@gmail.com";
 export const PRIVACY_URL = "https://example.com/integritet";
 export const TERMS_URL = "https://example.com/villkor";
 
