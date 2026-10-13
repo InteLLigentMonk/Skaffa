@@ -114,9 +114,10 @@ export const PasswordFields = <T extends FieldValues & PasswordFieldValues>({
         name={"password" as Path<T>}
         rules={{
           required: `${label} är obligatoriskt`,
+          // Samma gräns som minimum_password_length i Supabase Auth.
           minLength: {
-            value: 6,
-            message: "Lösenordet måste vara minst 6 tecken långt",
+            value: 8,
+            message: "Lösenordet måste vara minst 8 tecken långt",
           },
           // Re-runs the matching check when this field changes.
           deps: ["confirmPassword"] as Path<T>[],

@@ -62,6 +62,7 @@ const CreateHome = () => {
                 onChangeText={field.onChange}
                 autoCapitalize="sentences"
                 placeholder="Hallgatan 8"
+                maxLength={60}
                 returnKeyType="done"
               />
               <FieldError>{error?.message}</FieldError>

@@ -17,6 +17,12 @@ const ProtectedLayout = () => {
           title: "Återställ lösenord",
         }}
       />
+      <Stack.Screen
+        name="verify-reset"
+        options={{
+          title: "Återställ lösenord",
+        }}
+      />
     </Stack>
   );
 };

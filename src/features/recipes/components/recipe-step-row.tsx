@@ -39,6 +39,7 @@ const RecipeStepRow = ({
           <View className="flex-1">
             <Input
               ref={registerInput}
+              maxLength={2000}
               value={field.value}
               onBlur={field.onBlur}
               // Retur och inklistring går samma väg: varje radbrytning som

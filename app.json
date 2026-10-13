@@ -19,6 +19,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "nu.skaffa.app",
+      "allowBackup": false,
       "softwareKeyboardLayoutMode": "resize"
     },
     "web": {
@@ -43,7 +44,8 @@
           "cameraPermission": "Skaffa behöver tillgång till kameran för att du ska kunna fota receptet.",
           "microphonePermission": false
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

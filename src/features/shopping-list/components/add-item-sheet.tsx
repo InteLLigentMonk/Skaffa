@@ -240,6 +240,7 @@ const FreeTextField = ({
         value={value}
         onChangeText={onChange}
         placeholder="T.ex. grillkol"
+        maxLength={120}
         autoFocus
         onFocus={onFocus}
         onBlur={onBlur}

@@ -33,6 +33,12 @@ när mer än en person rör databasen.
 | `20261011150000_shopping_list_plan_changed.sql` | `shopping_lists.plan_changed_at` + trigger på `planned_meals` som stämplar veckans lista, så klienten kan visa "Planen har ändrats" |
 | `20261012120000_delete_account.sql` | RPC `delete_account`: lämnar hemmet via `leave_home` (så sista medlemmen inte lämnar ett föräldralöst hem) och raderar sedan auth-användaren |
 | `20261012120100_sync_display_name.sql` | Trigger på `auth.users` som speglar `display_name` i metadatan till `profiles` |
+| `20261013120000_lock_storage_cleanup_rpcs.sql` | Städköns RPC:er återkallas från `PUBLIC` — de var anropbara utan inloggning |
+| `20261013120100_storage_path_and_bucket_limits.sql` | `public_recipes.image_path` och `profiles.avatar_path` måste ligga i ägarens mapp; MIME- och storleksgräns på buckets; ingen uppladdning till `public_recipes` tills publicering finns |
+| `20261013120200_cross_home_references.sql` | `with check` kräver att `recipe_id`/`ingredient_id` tillhör hemmet; `generate_shopping_list` filtrerar själv på hemmet |
+| `20261013120300_invite_token_guard.sql` | Trigger: servern sätter inbjudans `token` och `expires_at`, och en inbjudan kan bara återkallas |
+| `20261013120400_hide_public_recipe_origin.sql` | `source_home_id` och `published_by` i `public_recipes` går inte längre att läsa för användare |
+| `20261013120500_text_length_limits.sql` | Maxlängd på fritextkolumner; `handle_new_user` och `sync_profile_display_name` kortar `display_name` till 50 tecken |
 
 Enheter fungerar så här: ingrediensen bär ett **måttslag** (`dimension`), inte ett
 mått. Användaren väljer enhet per receptrad, och `amount_base` härleds av en

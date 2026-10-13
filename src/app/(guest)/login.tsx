@@ -1,7 +1,7 @@
 import { useAuth } from "@/features/auth/contexts/auth-context";
 import { isAuthError } from "@supabase/supabase-js";
 import { Link, useRouter } from "expo-router";
-import { Alert, Button } from "heroui-native";
+import { Button } from "heroui-native";
 import { FieldError } from "heroui-native/field-error";
 import { Input } from "heroui-native/input";
 import { Label } from "heroui-native/label";
@@ -23,7 +23,7 @@ type FormValues = {
 };
 
 const Login = () => {
-  const { login, recoveryError, clearRecoveryError } = useAuth();
+  const { login } = useAuth();
   const router = useRouter();
 
   const passwordRef = useRef<TextInput>(null);
@@ -95,19 +95,6 @@ const Login = () => {
         <Typography.Heading type="h1" align="center" weight="bold">
           Logga in
         </Typography.Heading>
-
-        {recoveryError && (
-          <Alert status="danger">
-            <Alert.Indicator />
-            <Alert.Content>
-              <Alert.Title>Återställning misslyckades</Alert.Title>
-              <Alert.Description>{recoveryError}</Alert.Description>
-            </Alert.Content>
-            <Button variant="primary" onPress={clearRecoveryError}>
-              Ok
-            </Button>
-          </Alert>
-        )}
 
         <Controller
           control={control}
