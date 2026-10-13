@@ -175,3 +175,23 @@ export const revokeInvite = async (inviteId: string) => {
     .eq("id", inviteId);
   if (error) throw error;
 };
+
+// members_delete släpper igenom hemmets ägare, och guard_last_owner stoppar
+// att sista ägaren tas bort. Den borttagna flyttas av guarden i root-layouten
+// nästa gång hens useHome refetchar.
+export const removeMember = async ({
+  homeId,
+  userId,
+}: {
+  homeId: string;
+  userId: string;
+}) => {
+  const { error } = await supabase
+    .from("home_members")
+    .delete()
+    .eq("home_id", homeId)
+    .eq("user_id", userId)
+    .select("user_id")
+    .single();
+  if (error) throw error;
+};

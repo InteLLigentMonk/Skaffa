@@ -5,11 +5,12 @@ import { PickerIngredient } from "@/features/ingredients/ingredient-types";
 import { RecipeFormValues } from "@/features/recipes/recipe-types";
 import { DEFAULT_UNIT } from "@/lib/units";
 import { useRouter } from "expo-router";
-import { SkeletonGroup, Typography } from "heroui-native";
+import { Button, SkeletonGroup, Typography } from "heroui-native";
 import { useFormContext, useWatch } from "react-hook-form";
+import { View } from "react-native";
 
 const ChooseIngredients = () => {
-  const { data: ingredients, isPending, error } = useIngredients();
+  const { data: ingredients, isPending, error, refetch } = useIngredients();
 
   const router = useRouter();
   const { control, getValues, setValue } = useFormContext<RecipeFormValues>();
@@ -52,16 +53,20 @@ const ChooseIngredients = () => {
         </SkeletonGroup>
       </ModalScreen>
     );
-  if (error)
+  if (error || !ingredients)
     return (
       <ModalScreen>
-        <Typography.Paragraph>Error: {error.message}</Typography.Paragraph>
-      </ModalScreen>
-    );
-  if (!ingredients)
-    return (
-      <ModalScreen>
-        <Typography.Paragraph>No ingredients found</Typography.Paragraph>
+        <View className="flex-1 items-center justify-center gap-4 p-8">
+          <Typography.Paragraph color="muted" align="center">
+            Kunde inte hämta ingredienserna.
+          </Typography.Paragraph>
+          <Button variant="secondary" onPress={() => refetch()}>
+            <Button.Label>Försök igen</Button.Label>
+          </Button>
+          <Button variant="tertiary" onPress={() => router.back()}>
+            <Button.Label>Tillbaka</Button.Label>
+          </Button>
+        </View>
       </ModalScreen>
     );
   return (

@@ -13,6 +13,15 @@ const AccountLayout = () => {
           name="change-password"
           options={{ title: "Ändra lösenord" }}
         />
+        <Stack.Screen name="edit-name" options={{ title: "Byt namn" }} />
+        <Stack.Screen
+          name="change-email"
+          options={{ title: "Byt e-postadress" }}
+        />
+        <Stack.Screen
+          name="delete-account"
+          options={{ title: "Radera konto" }}
+        />
       </Stack>
     </AuthorizedUserProvider>
   );

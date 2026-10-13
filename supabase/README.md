@@ -31,6 +31,8 @@ när mer än en person rör databasen.
 | `20261011130000_ingredient_name_vs_seed.sql` | Trigger: en hemingrediens får inte heta samma sak som en frö-ingrediens (indexet gäller bara per ägare) |
 | `20261011140000_update_planned_meal.sql` | RPC `update_planned_meal`: ändra portioner, byt recept eller flytta en planerad måltid, med ihopslagning i stället för unique-krock |
 | `20261011150000_shopping_list_plan_changed.sql` | `shopping_lists.plan_changed_at` + trigger på `planned_meals` som stämplar veckans lista, så klienten kan visa "Planen har ändrats" |
+| `20261012120000_delete_account.sql` | RPC `delete_account`: lämnar hemmet via `leave_home` (så sista medlemmen inte lämnar ett föräldralöst hem) och raderar sedan auth-användaren |
+| `20261012120100_sync_display_name.sql` | Trigger på `auth.users` som speglar `display_name` i metadatan till `profiles` |
 
 Enheter fungerar så här: ingrediensen bär ett **måttslag** (`dimension`), inte ett
 mått. Användaren väljer enhet per receptrad, och `amount_base` härleds av en

@@ -4,6 +4,7 @@ import { useHome } from "@/features/home/hooks/use-home";
 import WeekPicker from "@/features/plan/components/week-picker";
 import AddItemSheet from "@/features/shopping-list/components/add-item-sheet";
 import CostSheet from "@/features/shopping-list/components/cost-sheet";
+import EditItemSheet from "@/features/shopping-list/components/edit-item-sheet";
 import ListCategorySection from "@/features/shopping-list/components/list-category-section";
 import {
   useCategoryOrder,
@@ -37,7 +38,10 @@ import { Alert, RefreshControl, ScrollView, View } from "react-native";
 
 // Vilket ark som är öppet. key ger arket en ny montering per öppning — samma
 // mönster som veckoplanen.
-type Sheet = { kind: "add" | "cost"; key: number };
+type Sheet = { key: number } & (
+  | { kind: "add" | "cost" }
+  | { kind: "edit"; item: ShoppingListItem }
+);
 
 const ShoppingListScreen = () => {
   const { data: home } = useHome();
@@ -68,7 +72,7 @@ const ShoppingListScreen = () => {
   const [sheet, setSheet] = useState<Sheet | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-  const openSheet = (kind: Sheet["kind"]) => {
+  const openSheet = (kind: "add" | "cost") => {
     setSheet({ kind, key: Date.now() });
     setIsSheetOpen(true);
   };
@@ -101,16 +105,31 @@ const ShoppingListScreen = () => {
   // Bara det man lagt till själv, och det planen inte längre kräver, går att
   // ta bort. En genererad rad som behövs skulle komma tillbaka vid nästa
   // uppdatering, och en återkommande vara tas bort under Inställningar.
+  // Manuella rader går dessutom att ändra — en genererad rad skulle skrivas
+  // över av nästa generering.
   const onLongPress = (item: ShoppingListItem) => {
     if (!home || (item.source !== "manual" && !item.isOrphaned)) return;
+    const removeItem = () =>
+      remove.mutate({ homeId: home.id, weekStart, id: item.id });
+
+    if (item.source !== "manual") {
+      return () =>
+        Alert.alert(`Ta bort ${item.name}?`, undefined, [
+          { text: "Avbryt", style: "cancel" },
+          { text: "Ta bort", style: "destructive", onPress: removeItem },
+        ]);
+    }
+
     return () =>
-      Alert.alert(`Ta bort ${item.name}?`, undefined, [
+      Alert.alert(item.name, undefined, [
         { text: "Avbryt", style: "cancel" },
+        { text: "Ta bort", style: "destructive", onPress: removeItem },
         {
-          text: "Ta bort",
-          style: "destructive",
-          onPress: () =>
-            remove.mutate({ homeId: home.id, weekStart, id: item.id }),
+          text: "Ändra",
+          onPress: () => {
+            setSheet({ kind: "edit", item, key: Date.now() });
+            setIsSheetOpen(true);
+          },
         },
       ]);
   };
@@ -264,11 +283,22 @@ const ShoppingListScreen = () => {
         )}
       </ScrollView>
 
-      {!isLoading && !loadFailed && <Fab onPress={() => openSheet("add")} />}
+      {!isLoading && !loadFailed && (
+        <Fab accessibilityLabel="Lägg till vara" onPress={() => openSheet("add")} />
+      )}
 
       {sheet?.kind === "add" && (
         <AddItemSheet
           key={sheet.key}
+          weekStart={weekStart}
+          isOpen={isSheetOpen}
+          onClose={() => setIsSheetOpen(false)}
+        />
+      )}
+      {sheet?.kind === "edit" && (
+        <EditItemSheet
+          key={sheet.key}
+          item={sheet.item}
           weekStart={weekStart}
           isOpen={isSheetOpen}
           onClose={() => setIsSheetOpen(false)}

@@ -1,10 +1,11 @@
 import { useAuthorizedUser } from "@/features/auth/contexts/authorized-user-context";
-import { MemberRole } from "@/features/home/home-types";
+import { HomeMember, MemberRole } from "@/features/home/home-types";
 import {
   useDeleteHome,
   useHome,
   useHomeMembers,
   useLeaveHome,
+  useRemoveMember,
   useRenameHome,
   useSetMemberRole,
 } from "@/features/home/hooks/use-home";
@@ -25,6 +26,7 @@ import {
 import { useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -65,6 +67,7 @@ const ManageHome = () => {
   const setRole = useSetMemberRole();
   const leave = useLeaveHome();
   const remove = useDeleteHome();
+  const removeMember = useRemoveMember();
 
   const [nameDraft, setNameDraft] = useState<string | null>(null);
   const [confirmName, setConfirmName] = useState("");
@@ -92,6 +95,58 @@ const ManageHome = () => {
   // motsatsen och döljer raderingen hellre än att erbjuda ett säkert fel.
   const isAlone = members.data?.length === 1;
 
+  const confirmLeave = () =>
+    Alert.alert(
+      "Lämna hemmet?",
+      isAlone
+        ? "Du är ensam medlem, så hemmet och allt i det raderas. Det går inte att ångra."
+        : "Du behöver en ny inbjudan för att komma tillbaka.",
+      [
+        { text: "Avbryt", style: "cancel" },
+        {
+          text: isAlone ? "Lämna och radera" : "Lämna",
+          style: "destructive",
+          onPress: () => leave.mutate(),
+        },
+      ],
+    );
+
+  const changeRole = (member: HomeMember) => {
+    const role: MemberRole = member.role === "owner" ? "member" : "owner";
+    const run = () =>
+      setRole.mutate({ homeId: home.id, userId: member.userId, role });
+
+    // Att degradera sig själv går inte att ångra själv — bara en annan ägare
+    // kan ge tillbaka rollen.
+    if (member.userId === user.id && role === "member") {
+      Alert.alert(
+        "Sluta vara ägare?",
+        "Du kan inte längre bjuda in, byta roller eller byta namn på hemmet. Bara en annan ägare kan göra dig till ägare igen.",
+        [
+          { text: "Avbryt", style: "cancel" },
+          { text: "Gör mig till medlem", style: "destructive", onPress: run },
+        ],
+      );
+      return;
+    }
+    run();
+  };
+
+  const confirmRemove = (member: HomeMember) =>
+    Alert.alert(
+      `Ta bort ${member.displayName}?`,
+      "Hen förlorar tillgången till hemmets recept, veckoplan och inköpslista, och behöver en ny inbjudan för att komma tillbaka.",
+      [
+        { text: "Avbryt", style: "cancel" },
+        {
+          text: "Ta bort",
+          style: "destructive",
+          onPress: () =>
+            removeMember.mutate({ homeId: home.id, userId: member.userId }),
+        },
+      ],
+    );
+
   return (
     <KeyboardAvoidingView
       behavior={keyboardBehavior}
@@ -118,6 +173,7 @@ const ManageHome = () => {
                 <Button
                   variant="tertiary"
                   className="rounded-xl bg-field p-2"
+                  accessibilityLabel="Byt namn på hemmet"
                   onPress={() => setNameDraft(home.name)}
                 >
                   <StyledIonicons name="pencil-outline" size={20} />
@@ -190,9 +246,20 @@ const ManageHome = () => {
 
           {members.isPending && <ActivityIndicator />}
           {members.isError && (
-            <Typography.Paragraph type="body-sm" color="muted">
-              Kunde inte läsa medlemmarna.
-            </Typography.Paragraph>
+            <View className="flex-row items-center justify-between gap-2">
+              <Typography.Paragraph type="body-sm" color="muted">
+                Kunde inte läsa medlemmarna.
+              </Typography.Paragraph>
+              <Button
+                variant="tertiary"
+                className="rounded-xl bg-field"
+                onPress={() => members.refetch()}
+              >
+                <Typography.Paragraph type="body-sm">
+                  Försök igen
+                </Typography.Paragraph>
+              </Button>
+            </View>
           )}
 
           <View className="gap-2">
@@ -216,25 +283,40 @@ const ManageHome = () => {
                     </Chip>
                   </View>
 
-                  {isOwner && !wouldOrphan && (
-                    <Button
-                      variant="tertiary"
-                      className="rounded-xl bg-field"
-                      isDisabled={setRole.isPending}
-                      onPress={() =>
-                        setRole.mutate({
-                          homeId: home.id,
-                          userId: member.userId,
-                          role: member.role === "owner" ? "member" : "owner",
-                        })
-                      }
-                    >
-                      <Typography.Paragraph type="body-sm">
-                        {member.role === "owner"
-                          ? "Gör till medlem"
-                          : "Gör till ägare"}
-                      </Typography.Paragraph>
-                    </Button>
+                  {isOwner && (!wouldOrphan || !isMe) && (
+                    <View className="flex-row gap-2">
+                      {!wouldOrphan && (
+                        <Button
+                          variant="tertiary"
+                          className="flex-1 rounded-xl bg-field"
+                          isDisabled={setRole.isPending}
+                          onPress={() => changeRole(member)}
+                        >
+                          <Typography.Paragraph type="body-sm">
+                            {member.role === "owner"
+                              ? "Gör till medlem"
+                              : "Gör till ägare"}
+                          </Typography.Paragraph>
+                        </Button>
+                      )}
+                      {/* Sig själv lämnar man via "Lämna hemmet", som har
+                          rätt grenar för sista medlemmen. */}
+                      {!isMe && (
+                        <Button
+                          variant="tertiary"
+                          className="flex-1 rounded-xl bg-danger-soft"
+                          isDisabled={removeMember.isPending}
+                          onPress={() => confirmRemove(member)}
+                        >
+                          <Typography.Paragraph
+                            type="body-sm"
+                            className="text-danger"
+                          >
+                            Ta bort
+                          </Typography.Paragraph>
+                        </Button>
+                      )}
+                    </View>
                   )}
                 </Surface>
               );
@@ -243,6 +325,9 @@ const ManageHome = () => {
 
           <FieldError isInvalid={!!setRole.error}>
             {errorText(setRole.error, "Kunde inte ändra rollen")}
+          </FieldError>
+          <FieldError isInvalid={!!removeMember.error}>
+            {errorText(removeMember.error, "Kunde inte ta bort medlemmen")}
           </FieldError>
         </View>
 
@@ -263,7 +348,7 @@ const ManageHome = () => {
             variant="tertiary"
             className="rounded-2xl bg-danger-soft"
             isDisabled={leave.isPending}
-            onPress={() => leave.mutate()}
+            onPress={confirmLeave}
           >
             <StyledIonicons
               name="exit-outline"

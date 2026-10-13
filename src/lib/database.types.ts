@@ -909,6 +909,7 @@ export type Database = {
       copy_public_recipe: { Args: { _public_id: string }; Returns: string }
       create_home: { Args: { _name: string }; Returns: string }
       current_home_id: { Args: never; Returns: string }
+      delete_account: { Args: never; Returns: undefined }
       delete_home: { Args: { _home_id: string }; Returns: undefined }
       delete_standing_meal: { Args: { _id: string }; Returns: undefined }
       duplicate_recipe: { Args: { _recipe_id: string }; Returns: string }

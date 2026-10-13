@@ -97,9 +97,9 @@ const RecipeIndex = () => {
             placeholder="Sök recept"
           />
 
-          {/* Platshållare: (products) blir ingredienslistan i en senare plan. */}
           <PressableFeedback
-            onPress={() => router.push("/(authorized)/(products)")}
+            accessibilityRole="button"
+            onPress={() => router.push("/ingredients")}
           >
             <Surface
               variant="secondary"
@@ -111,7 +111,7 @@ const RecipeIndex = () => {
                 className="text-foreground"
               />
               <Typography.Paragraph weight="bold" className="flex-1">
-                Ingredienser
+                Egna ingredienser
               </Typography.Paragraph>
               <StyledIonicons
                 name="chevron-forward"
@@ -207,7 +207,7 @@ const RecipeIndex = () => {
         />
       )}
 
-      <Fab onPress={() => createRecipe()} />
+      <Fab accessibilityLabel="Nytt recept" onPress={() => createRecipe()} />
 
       {planTarget && (
         <RecipeListPlanSheet

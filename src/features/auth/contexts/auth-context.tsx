@@ -47,6 +47,15 @@ type AuthState = {
     newPassword: string,
     currentPassword: string | null,
   ) => Promise<void>;
+  updateDisplayName: (displayName: string) => Promise<void>;
+  // Skickar en kod till den nya adressen (och till den nuvarande om "Secure
+  // email change" är på i Supabase). Adressen byts först när koden verifierats.
+  requestEmailChange: (newEmail: string) => Promise<void>;
+  resendEmailChange: (newEmail: string) => Promise<void>;
+  // true när bytet är klart. false betyder att Supabase väntar på koden till
+  // den andra adressen också.
+  confirmEmailChange: (email: string, token: string) => Promise<boolean>;
+  deleteAccount: () => Promise<void>;
   // True from the moment a recovery link is applied until the password has
   // actually been changed. Deliberately kept here rather than passed as a route
   // param — a crafted deep link could otherwise skip the current-password check.
@@ -263,6 +272,56 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
     }
   };
 
+  // Metadatan är sanningen; triggern sync_profile_display_name speglar den
+  // till profiles, som medlemslistan läser.
+  const updateDisplayName = async (displayName: string) => {
+    const { data, error } = await supabase.auth.updateUser({
+      data: { display_name: displayName },
+    });
+    if (error) throw error;
+    setUser(mapUser(data.user));
+  };
+
+  const requestEmailChange = async (newEmail: string) => {
+    const { error } = await supabase.auth.updateUser({ email: newEmail });
+    if (error) throw error;
+  };
+
+  const resendEmailChange = async (newEmail: string) => {
+    const { error } = await supabase.auth.resend({
+      email: newEmail,
+      type: "email_change",
+    });
+    if (error) throw error;
+  };
+
+  const confirmEmailChange = async (email: string, token: string) => {
+    const { data, error } = await supabase.auth.verifyOtp({
+      email,
+      token,
+      type: "email_change",
+    });
+    if (error) throw error;
+
+    // Med "Secure email change" påslaget accepteras första koden utan att
+    // adressen byts — new_email står kvar tills båda koderna är inne.
+    const { data: fresh, error: userError } = await supabase.auth.getUser();
+    if (userError) throw userError;
+    const updated = fresh.user ?? data.user;
+    if (updated) setUser(mapUser(updated));
+
+    return !updated?.new_email;
+  };
+
+  // delete_account lämnar hemmet först (se migrationen) och raderar sedan
+  // auth-användaren. Sessionen är ogiltig efteråt, så logga ut lokalt —
+  // SIGNED_OUT rensar cachen och guarden flyttar till (guest).
+  const deleteAccount = async () => {
+    const { error } = await supabase.rpc("delete_account");
+    if (error) throw error;
+    await logout();
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -277,6 +336,11 @@ export const AuthProvider = ({ children }: PropsWithChildren) => {
         resendSignupVerification,
         forgotPassword,
         updateUser,
+        updateDisplayName,
+        requestEmailChange,
+        resendEmailChange,
+        confirmEmailChange,
+        deleteAccount,
         isRecoverySession,
         recoveryError,
         clearRecoveryError: () => setRecoveryError(null),

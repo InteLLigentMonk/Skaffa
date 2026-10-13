@@ -58,7 +58,6 @@
   },
   "scripts": {
     "start": "expo start",
-    "reset-project": "node ./scripts/reset-project.js",
     "drain-storage": "node --env-file=.env ./scripts/drain-storage-cleanup.mjs",
     "android": "expo run:android",
     "ios": "expo run:ios",

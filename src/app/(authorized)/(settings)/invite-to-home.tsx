@@ -15,7 +15,13 @@ import {
   Surface,
   Typography,
 } from "heroui-native";
-import { ActivityIndicator, ScrollView, Share, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  Share,
+  View,
+} from "react-native";
 
 const formatExpiry = (iso: string) => {
   const days = Math.ceil(
@@ -99,9 +105,20 @@ const InviteToHome = () => {
 
         {invites.isPending && <ActivityIndicator />}
         {invites.isError && (
-          <Typography.Paragraph type="body-sm" color="muted">
-            Kunde inte läsa inbjudningarna.
-          </Typography.Paragraph>
+          <View className="flex-row items-center justify-between gap-2">
+            <Typography.Paragraph type="body-sm" color="muted">
+              Kunde inte läsa inbjudningarna.
+            </Typography.Paragraph>
+            <Button
+              variant="tertiary"
+              className="rounded-xl bg-field"
+              onPress={() => invites.refetch()}
+            >
+              <Typography.Paragraph type="body-sm">
+                Försök igen
+              </Typography.Paragraph>
+            </Button>
+          </View>
         )}
         {invites.data?.length === 0 && (
           <Typography.Paragraph type="body-sm" color="muted">
@@ -143,7 +160,22 @@ const InviteToHome = () => {
                 className="flex-1 rounded-xl bg-danger-soft"
                 isDisabled={revoke.isPending}
                 onPress={() =>
-                  revoke.mutate({ inviteId: invite.id, homeId: home.id })
+                  Alert.alert(
+                    "Återkalla inbjudan?",
+                    "Länken slutar fungera direkt, även för den som redan fått den.",
+                    [
+                      { text: "Avbryt", style: "cancel" },
+                      {
+                        text: "Återkalla",
+                        style: "destructive",
+                        onPress: () =>
+                          revoke.mutate({
+                            inviteId: invite.id,
+                            homeId: home.id,
+                          }),
+                      },
+                    ],
+                  )
                 }
               >
                 <Typography.Paragraph type="body-sm" className="text-danger">

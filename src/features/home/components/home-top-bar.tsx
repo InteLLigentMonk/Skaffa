@@ -9,7 +9,7 @@ import {
   Separator,
   Typography,
 } from "heroui-native";
-import { View } from "react-native";
+import { Alert, View } from "react-native";
 
 const dateToday = (date = new Date()) => {
   const s = date.toLocaleDateString("sv-SE", {
@@ -67,7 +67,7 @@ export default function HomeTopBar({
         {title ?? dateToday()}
       </Typography.Paragraph>
       <Menu>
-        <Menu.Trigger>
+        <Menu.Trigger accessibilityLabel="Kontomeny">
           <Avatar initials={initials} />
         </Menu.Trigger>
         <Menu.Portal>
@@ -98,7 +98,19 @@ export default function HomeTopBar({
               </View>
             </Menu.Item>
             <Separator className="mx-2 my-2 opacity-75" />
-            <Menu.Item variant="danger" onPress={() => auth.logout()}>
+            <Menu.Item
+              variant="danger"
+              onPress={() =>
+                Alert.alert("Logga ut?", "Du kan logga in igen när du vill.", [
+                  { text: "Avbryt", style: "cancel" },
+                  {
+                    text: "Logga ut",
+                    style: "destructive",
+                    onPress: () => auth.logout(),
+                  },
+                ])
+              }
+            >
               <View className="flex flex-row items-center gap-4">
                 <StyledIonicons
                   name="log-out-outline"
