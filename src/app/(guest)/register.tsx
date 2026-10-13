@@ -142,6 +142,7 @@ const Register = () => {
               <Label>Namn</Label>
               <Input
                 placeholder="Ditt namn"
+                maxLength={50}
                 autoCapitalize="words"
                 autoComplete="name"
                 returnKeyType="next"

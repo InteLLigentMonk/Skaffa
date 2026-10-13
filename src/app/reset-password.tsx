@@ -12,7 +12,7 @@ import {
     Platform,
 } from "react-native";
 
-// Reached only through a recovery link — the root guard swaps the whole app for
+// Reached only through a verified recovery code (verify-reset) — the root guard swaps the whole app for
 // this screen. No current password is asked for here: the user is on this
 // screen precisely because they do not know it.
 const ResetPassword = () => {
@@ -58,7 +58,7 @@ const ResetPassword = () => {
         case "session_expired":
           setError("root", {
             message:
-              "Återställningen har gått ut. Begär en ny länk och försök igen.",
+              "Återställningen har gått ut. Begär en ny kod och försök igen.",
           });
           break;
         default:

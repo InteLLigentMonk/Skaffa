@@ -1,6 +1,6 @@
 import { useAuth } from "@/features/auth/contexts/auth-context";
+import { useRouter } from "expo-router";
 import {
-    Alert,
     Button,
     FieldError,
     Input,
@@ -8,13 +8,11 @@ import {
     TextField,
 } from "heroui-native";
 import { Typography } from "heroui-native/text";
-import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { KeyboardAvoidingView, Platform } from "react-native";
-import Animated, { FadeInDown, FadeOut } from "react-native-reanimated";
 
 const ForgotPassword = () => {
-  const [sent, setSent] = useState(false);
+  const router = useRouter();
   const { forgotPassword } = useAuth();
   const { control, handleSubmit, setError, formState } = useForm({
     defaultValues: {
@@ -25,13 +23,18 @@ const ForgotPassword = () => {
   const onSubmit = async (data: { email: string }) => {
     try {
       await forgotPassword(data.email);
-      setSent(true);
+      // Supabase svarar likadant oavsett om adressen finns, så nästa steg
+      // visas alltid — annars hade skärmen avslöjat vilka adresser som har konto.
+      router.push({
+        pathname: "/verify-reset",
+        params: { email: data.email.trim() },
+      });
     } catch (error) {
       console.error("Error occurred while requesting password reset:", error);
       setError("email", {
         type: "manual",
         message:
-          "Det gick inte att skicka återställningslänk. Försök igen senare.",
+          "Det gick inte att skicka återställningskoden. Försök igen senare.",
       });
     }
   };
@@ -46,21 +49,6 @@ const ForgotPassword = () => {
       <Typography.Heading type="h1" align="center" weight="bold">
         Glömt lösenord
       </Typography.Heading>
-
-      {sent && (
-        <Animated.View entering={FadeInDown} exiting={FadeOut}>
-          <Alert status="success">
-            <Alert.Indicator />
-            <Alert.Content>
-              <Alert.Title>Återställning skickad</Alert.Title>
-              <Alert.Description>
-                Om adressen finns hos oss har vi skickat en återställningslänk
-                dit. Kontrollera din inkorg.
-              </Alert.Description>
-            </Alert.Content>
-          </Alert>
-        </Animated.View>
-      )}
 
       <Controller
         control={control}
@@ -97,7 +85,7 @@ const ForgotPassword = () => {
         isDisabled={formState.isSubmitting}
         onPress={submit}
       >
-        Skicka återställningslänk
+        Skicka återställningskod
       </Button>
     </KeyboardAvoidingView>
   );

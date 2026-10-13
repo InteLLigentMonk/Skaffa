@@ -38,6 +38,9 @@ export const NameField = () => {
             onChangeText={field.onChange}
             autoCapitalize="sentences"
             placeholder="Pasta Bolognése"
+            // Databasen tillåter 120; marginalen ger plats åt " (kopia)" när
+            // receptet dupliceras.
+            maxLength={100}
           />
           <FieldError>{error?.message}</FieldError>
         </TextField>

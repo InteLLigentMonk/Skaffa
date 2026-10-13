@@ -75,6 +75,7 @@ const EditName = () => {
             <Label>Namn</Label>
             <Input
               placeholder="Ditt namn"
+              maxLength={50}
               value={value}
               onChangeText={onChange}
               onBlur={onBlur}

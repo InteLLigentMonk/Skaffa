@@ -104,6 +104,7 @@ const NameForm = ({
         <Label>Vara</Label>
         <Input
           value={name}
+          maxLength={120}
           onChangeText={setName}
           autoFocus
           onFocus={onFocus}

@@ -87,6 +87,7 @@ const NewIngredientForm = ({
               <Input
                 value={field.value}
                 onChangeText={field.onChange}
+                maxLength={80}
                 returnKeyType="next"
               />
               <FieldError>{error?.message}</FieldError>

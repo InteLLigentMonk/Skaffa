@@ -185,6 +185,7 @@ const ManageHome = () => {
               <TextField isInvalid={!!rename.error}>
                 <Input
                   value={nameDraft}
+                  maxLength={60}
                   onChangeText={setNameDraft}
                   autoCapitalize="sentences"
                   autoFocus

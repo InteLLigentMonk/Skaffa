@@ -71,6 +71,7 @@ const IngredientRow = ({ ingredient }: { ingredient: PickerIngredient }) => {
           <Input
             value={draft}
             onChangeText={setDraft}
+            maxLength={80}
             autoCapitalize="sentences"
             autoFocus
           />

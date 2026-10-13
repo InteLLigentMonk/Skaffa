@@ -78,7 +78,7 @@ const RootNavigator = () => {
         <Stack.Screen name="recipe/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="account" options={{ headerShown: false }} />
       </Stack.Protected>
-      {/* A recovery link takes over the entire app until a new password is
+      {/* A recovery code takes over the entire app until a new password is
           set, so the user cannot tab away while the old one is still valid. */}
       <Stack.Protected guard={isAuthenticated && isRecoverySession}>
         <Stack.Screen
