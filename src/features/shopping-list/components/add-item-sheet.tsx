@@ -7,7 +7,6 @@ import {
   PickerIngredient,
 } from "@/features/ingredients/ingredient-types";
 import { IsoDate, isoWeek } from "@/lib/dates";
-import { useSheetOpen } from "@/hooks/use-sheet-open";
 import {
   DEFAULT_UNIT,
   isValidAmount,
@@ -36,19 +35,18 @@ import { useAddListItem } from "../hooks/use-shopping-list";
 
 type Props = {
   weekStart: IsoDate;
+  /** Ny för varje öppning; null tills arket öppnats första gången. */
+  formKey: number | null;
   isOpen: boolean;
   onClose: () => void;
 };
 
-// Monteras om för varje öppning (key i skärmen), så formuläret börjar alltid
-// tomt.
-const AddItemSheet = ({ weekStart, isOpen, onClose }: Props) => {
-  // Se use-sheet-open: arket monteras ofta redan öppet.
-  const sheetOpen = useSheetOpen(isOpen);
-
+// Arket är monterat hela tiden — se kommentaren om Sheet i skärmen. Formuläret
+// monteras om för varje öppning (formKey), så det börjar alltid tomt.
+const AddItemSheet = ({ weekStart, formKey, isOpen, onClose }: Props) => {
   return (
     <BottomSheet
-      isOpen={sheetOpen}
+      isOpen={isOpen}
       onOpenChange={(open) => {
         if (!open) onClose();
       }}
@@ -56,7 +54,9 @@ const AddItemSheet = ({ weekStart, isOpen, onClose }: Props) => {
       <BottomSheet.Portal>
         <BottomSheet.Overlay />
         <BottomSheet.Content>
-          <AddItemForm weekStart={weekStart} onDone={onClose} />
+          {formKey !== null && (
+            <AddItemForm key={formKey} weekStart={weekStart} onDone={onClose} />
+          )}
         </BottomSheet.Content>
       </BottomSheet.Portal>
     </BottomSheet>

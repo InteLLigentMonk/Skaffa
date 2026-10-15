@@ -40,8 +40,14 @@ import {
 import { useState } from "react";
 import { Alert, RefreshControl, ScrollView, View } from "react-native";
 
-// Vilket ark som är öppet. key ger arket en ny montering per öppning, så
-// varje öppning börjar från början även för samma måltid.
+// Vilket ark som är öppet. key ger formuläret i arket en ny montering per
+// öppning, så varje öppning börjar från början även för samma måltid.
+//
+// Arken själva är monterade hela tiden — montera dem inte villkorligt. gorhom
+// (under HeroUI:s BottomSheet) ignorerar tyst en öppning innan arket mätt upp
+// sin layout. Ett ark som monteras i samma veva som det öppnas förlorar det
+// loppet: i en release-build alltid, i dev ibland. Kvar blir en osynlig
+// overlay som äter nästa tryck.
 type Sheet = { key: number } & (
   | { kind: "add"; slot: MealSlot | null }
   | { kind: "servings" | "swap" | "move"; meal: PlannedMeal }
@@ -63,10 +69,14 @@ const PlanScreen = () => {
 
   const [scrolled, setScrolled] = useState(false);
   const [date, setDate] = useState<IsoDate>(today());
-  // Sheet hålls kvar medan isSheetOpen är false, så arket hinner animeras ut
-  // innan det avmonteras — samma mönster som receptlistan.
+  // Sheet hålls kvar medan isSheetOpen är false, så formuläret syns medan
+  // arket animeras ut.
   const [sheet, setSheet] = useState<Sheet | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const addSheet = sheet?.kind === "add" ? sheet : null;
+  const servingsSheet = sheet?.kind === "servings" ? sheet : null;
+  const swapSheet = sheet?.kind === "swap" ? sheet : null;
+  const moveSheet = sheet?.kind === "move" ? sheet : null;
 
   const weekStart = weekMonday(date);
   const isToday = date === today();
@@ -252,43 +262,35 @@ const PlanScreen = () => {
         />
       )}
 
-      {sheet?.kind === "add" && (
-        <AddMealSheet
-          key={sheet.key}
-          date={date}
-          initialSlot={sheet.slot}
-          slots={slots}
-          byMeal={grouped.byMeal}
-          isOpen={isSheetOpen}
-          onClose={closeSheet}
-        />
-      )}
-      {sheet?.kind === "servings" && (
-        <ServingsSheet
-          key={sheet.key}
-          meal={sheet.meal}
-          isOpen={isSheetOpen}
-          onClose={closeSheet}
-        />
-      )}
-      {sheet?.kind === "swap" && (
-        <SwapRecipeSheet
-          key={sheet.key}
-          meal={sheet.meal}
-          isOpen={isSheetOpen}
-          onClose={closeSheet}
-        />
-      )}
-      {sheet?.kind === "move" && (
-        <MoveMealSheet
-          key={sheet.key}
-          meal={sheet.meal}
-          slots={slots}
-          grouped={grouped}
-          isOpen={isSheetOpen}
-          onClose={closeSheet}
-        />
-      )}
+      <AddMealSheet
+        date={date}
+        initialSlot={addSheet?.slot ?? null}
+        formKey={addSheet?.key ?? null}
+        slots={slots}
+        byMeal={grouped.byMeal}
+        isOpen={isSheetOpen && !!addSheet}
+        onClose={closeSheet}
+      />
+      <ServingsSheet
+        meal={servingsSheet?.meal ?? null}
+        formKey={servingsSheet?.key ?? null}
+        isOpen={isSheetOpen && !!servingsSheet}
+        onClose={closeSheet}
+      />
+      <SwapRecipeSheet
+        meal={swapSheet?.meal ?? null}
+        formKey={swapSheet?.key ?? null}
+        isOpen={isSheetOpen && !!swapSheet}
+        onClose={closeSheet}
+      />
+      <MoveMealSheet
+        meal={moveSheet?.meal ?? null}
+        formKey={moveSheet?.key ?? null}
+        slots={slots}
+        grouped={grouped}
+        isOpen={isSheetOpen && !!moveSheet}
+        onClose={closeSheet}
+      />
     </View>
   );
 };

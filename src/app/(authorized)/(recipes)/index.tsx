@@ -42,8 +42,8 @@ const RecipeIndex = () => {
   const [diet, setDiet] = useState<DietClass | null>(null);
 
   // Scope sparas med receptet: byter man flik medan arket är öppet gäller det
-  // fortfarande receptet man valde. isPlanOpen hålls separat så att arket kan
-  // animeras ut innan det avmonteras.
+  // fortfarande receptet man valde. isPlanOpen hålls separat så att receptet
+  // ligger kvar i arket medan det animeras ut.
   const [planTarget, setPlanTarget] = useState<{
     recipe: RecipeCardData;
     scope: RecipeScope;
@@ -209,16 +209,11 @@ const RecipeIndex = () => {
 
       <Fab accessibilityLabel="Nytt recept" onPress={() => createRecipe()} />
 
-      {planTarget && (
-        <RecipeListPlanSheet
-          // Nytt recept = nytt ark, så portionerna börjar om.
-          key={`${planTarget.scope}:${planTarget.recipe.id}`}
-          recipe={planTarget.recipe}
-          scope={planTarget.scope}
-          isOpen={isPlanOpen}
-          onClose={() => setIsPlanOpen(false)}
-        />
-      )}
+      <RecipeListPlanSheet
+        target={planTarget}
+        isOpen={isPlanOpen}
+        onClose={() => setIsPlanOpen(false)}
+      />
     </View>
   );
 };

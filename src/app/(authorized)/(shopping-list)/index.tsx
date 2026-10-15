@@ -36,8 +36,9 @@ import {
 import { useState } from "react";
 import { Alert, RefreshControl, ScrollView, View } from "react-native";
 
-// Vilket ark som är öppet. key ger arket en ny montering per öppning — samma
-// mönster som veckoplanen.
+// Vilket ark som är öppet. Arken är monterade hela tiden och key ger bara
+// formuläret i dem en ny montering per öppning — samma mönster, och samma
+// skäl, som veckoplanen.
 type Sheet = { key: number } & (
   | { kind: "add" | "cost" }
   | { kind: "edit"; item: ShoppingListItem }
@@ -67,10 +68,14 @@ const ShoppingListScreen = () => {
 
   const [scrolled, setScrolled] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  // Sheet hålls kvar medan isSheetOpen är false, så arket hinner animeras ut
-  // innan det avmonteras — samma mönster som veckoplanen.
+  // Sheet hålls kvar medan isSheetOpen är false, så formuläret syns medan
+  // arket animeras ut — samma mönster som veckoplanen.
   const [sheet, setSheet] = useState<Sheet | null>(null);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const addSheet = sheet?.kind === "add" ? sheet : null;
+  const editSheet = sheet?.kind === "edit" ? sheet : null;
+  const costSheet = sheet?.kind === "cost" ? sheet : null;
+  const closeSheet = () => setIsSheetOpen(false);
 
   const openSheet = (kind: "add" | "cost") => {
     setSheet({ kind, key: Date.now() });
@@ -287,32 +292,26 @@ const ShoppingListScreen = () => {
         <Fab accessibilityLabel="Lägg till vara" onPress={() => openSheet("add")} />
       )}
 
-      {sheet?.kind === "add" && (
-        <AddItemSheet
-          key={sheet.key}
-          weekStart={weekStart}
-          isOpen={isSheetOpen}
-          onClose={() => setIsSheetOpen(false)}
-        />
-      )}
-      {sheet?.kind === "edit" && (
-        <EditItemSheet
-          key={sheet.key}
-          item={sheet.item}
-          weekStart={weekStart}
-          isOpen={isSheetOpen}
-          onClose={() => setIsSheetOpen(false)}
-        />
-      )}
-      {sheet?.kind === "cost" && (
-        <CostSheet
-          key={sheet.key}
-          weekStart={weekStart}
-          totalCost={data?.totalCost ?? null}
-          isOpen={isSheetOpen}
-          onClose={() => setIsSheetOpen(false)}
-        />
-      )}
+      <AddItemSheet
+        weekStart={weekStart}
+        formKey={addSheet?.key ?? null}
+        isOpen={isSheetOpen && !!addSheet}
+        onClose={closeSheet}
+      />
+      <EditItemSheet
+        item={editSheet?.item ?? null}
+        formKey={editSheet?.key ?? null}
+        weekStart={weekStart}
+        isOpen={isSheetOpen && !!editSheet}
+        onClose={closeSheet}
+      />
+      <CostSheet
+        weekStart={weekStart}
+        totalCost={data?.totalCost ?? null}
+        formKey={costSheet?.key ?? null}
+        isOpen={isSheetOpen && !!costSheet}
+        onClose={closeSheet}
+      />
     </View>
   );
 };
