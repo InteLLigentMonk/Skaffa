@@ -1,5 +1,4 @@
 import { useHome } from "@/features/home/hooks/use-home";
-import { useSheetOpen } from "@/hooks/use-sheet-open";
 import { IsoDate, isoWeek } from "@/lib/dates";
 import { formatNumber, isValidAmount, parseAmount } from "@/lib/units";
 import {
@@ -25,17 +24,18 @@ const CHART_WEEKS = 8;
 type Props = {
   weekStart: IsoDate;
   totalCost: number | null;
+  /** Ny för varje öppning; null tills arket öppnats första gången. */
+  formKey: number | null;
   isOpen: boolean;
   onClose: () => void;
 };
 
-const CostSheet = ({ weekStart, totalCost, isOpen, onClose }: Props) => {
-  // Se use-sheet-open: arket monteras ofta redan öppet.
-  const sheetOpen = useSheetOpen(isOpen);
-
+// Arket är monterat hela tiden — se kommentaren om Sheet i skärmen. Formuläret
+// monteras om för varje öppning (formKey), så fältet börjar från veckans belopp.
+const CostSheet = ({ weekStart, totalCost, formKey, isOpen, onClose }: Props) => {
   return (
     <BottomSheet
-      isOpen={sheetOpen}
+      isOpen={isOpen}
       onOpenChange={(open) => {
         if (!open) onClose();
       }}
@@ -43,11 +43,14 @@ const CostSheet = ({ weekStart, totalCost, isOpen, onClose }: Props) => {
       <BottomSheet.Portal>
         <BottomSheet.Overlay />
         <BottomSheet.Content>
-          <CostForm
-            weekStart={weekStart}
-            totalCost={totalCost}
-            onDone={onClose}
-          />
+          {formKey !== null && (
+            <CostForm
+              key={formKey}
+              weekStart={weekStart}
+              totalCost={totalCost}
+              onDone={onClose}
+            />
+          )}
         </BottomSheet.Content>
       </BottomSheet.Portal>
     </BottomSheet>

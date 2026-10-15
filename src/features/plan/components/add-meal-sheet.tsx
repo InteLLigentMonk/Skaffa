@@ -1,4 +1,3 @@
-import { useSheetOpen } from "@/hooks/use-sheet-open";
 import NumberSelect from "@/components/number-select";
 import { useRecipe } from "@/features/recipes/hooks/use-recipes";
 import { formatDayLong, IsoDate } from "@/lib/dates";
@@ -24,6 +23,8 @@ type Props = {
   date: IsoDate;
   /** Förvald måltid (från ett tomt fält); null = FAB:en. */
   initialSlot: MealSlot | null;
+  /** Ny för varje öppning; null tills arket öppnats första gången. */
+  formKey: number | null;
   /** Hemmets synliga måltider. */
   slots: MealSlot[];
   byMeal: GroupedMeals["byMeal"];
@@ -35,23 +36,13 @@ const defaultSlot = (slots: MealSlot[]): MealSlot | null =>
   slots.includes("middag") ? "middag" : (slots[0] ?? null);
 
 // Två steg i samma ark: först receptet, sedan måltid och portioner. Dagen är
-// den man står på i veckoplanen. Arket monteras om för varje öppning (key i
-// skärmen), så det börjar alltid på steg ett.
-const AddMealSheet = ({
-  date,
-  initialSlot,
-  slots,
-  byMeal,
-  isOpen,
-  onClose,
-}: Props) => {
-  // Se use-sheet-open: arket monteras ofta redan öppet.
-  const sheetOpen = useSheetOpen(isOpen);
-  const [recipe, setRecipe] = useState<PickedRecipe | null>(null);
-
+// den man står på i veckoplanen. Arket är monterat hela tiden — se kommentaren
+// om Sheet i veckoplanen. Formuläret monteras om för varje öppning (formKey),
+// så det börjar alltid på steg ett.
+const AddMealSheet = ({ formKey, isOpen, onClose, ...formProps }: Props) => {
   return (
     <BottomSheet
-      isOpen={sheetOpen}
+      isOpen={isOpen}
       onOpenChange={(open) => {
         if (!open) onClose();
       }}
@@ -59,33 +50,55 @@ const AddMealSheet = ({
       <BottomSheet.Portal>
         <BottomSheet.Overlay />
         <BottomSheet.Content>
-          <View className="gap-4">
-            <View>
-              <BottomSheet.Title>Lägg till måltid</BottomSheet.Title>
-              <BottomSheet.Description>
-                {capitalize(formatDayLong(date))}
-              </BottomSheet.Description>
-            </View>
-
-            {recipe ? (
-              <MealDetails
-                // Nytt recept = nya portioner att föreslå.
-                key={recipe.id}
-                recipe={recipe}
-                date={date}
-                initialSlot={initialSlot}
-                slots={slots}
-                byMeal={byMeal}
-                onChangeRecipe={() => setRecipe(null)}
-                onDone={onClose}
-              />
-            ) : (
-              <RecipePicker onPick={setRecipe} />
-            )}
-          </View>
+          {formKey !== null && (
+            <AddMealForm key={formKey} {...formProps} onDone={onClose} />
+          )}
         </BottomSheet.Content>
       </BottomSheet.Portal>
     </BottomSheet>
+  );
+};
+
+const AddMealForm = ({
+  date,
+  initialSlot,
+  slots,
+  byMeal,
+  onDone,
+}: {
+  date: IsoDate;
+  initialSlot: MealSlot | null;
+  slots: MealSlot[];
+  byMeal: GroupedMeals["byMeal"];
+  onDone: () => void;
+}) => {
+  const [recipe, setRecipe] = useState<PickedRecipe | null>(null);
+
+  return (
+    <View className="gap-4">
+      <View>
+        <BottomSheet.Title>Lägg till måltid</BottomSheet.Title>
+        <BottomSheet.Description>
+          {capitalize(formatDayLong(date))}
+        </BottomSheet.Description>
+      </View>
+
+      {recipe ? (
+        <MealDetails
+          // Nytt recept = nya portioner att föreslå.
+          key={recipe.id}
+          recipe={recipe}
+          date={date}
+          initialSlot={initialSlot}
+          slots={slots}
+          byMeal={byMeal}
+          onChangeRecipe={() => setRecipe(null)}
+          onDone={onDone}
+        />
+      ) : (
+        <RecipePicker onPick={setRecipe} />
+      )}
+    </View>
   );
 };
 

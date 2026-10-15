@@ -1,7 +1,6 @@
 import { useHome } from "@/features/home/hooks/use-home";
 import AmountField from "@/features/ingredients/components/amount-field";
 import { useIngredients } from "@/features/ingredients/hooks/use-ingredients";
-import { useSheetOpen } from "@/hooks/use-sheet-open";
 import { IsoDate } from "@/lib/dates";
 import {
   DEFAULT_UNIT,
@@ -29,7 +28,10 @@ import { useUpdateManualItem } from "../hooks/use-shopping-list";
 import { ShoppingListItem } from "../shopping-list-types";
 
 type Props = {
-  item: ShoppingListItem;
+  /** null tills en vara valts. */
+  item: ShoppingListItem | null;
+  /** Ny för varje öppning, så formuläret monteras om. */
+  formKey: number | null;
   weekStart: IsoDate;
   isOpen: boolean;
   onClose: () => void;
@@ -37,13 +39,12 @@ type Props = {
 
 // Ändrar en vara man lagt till själv. Fritext har bara ett namn; en vara som
 // är en ingrediens har ett fast namn (det är ingrediensens) men en mängd.
-// Monteras om för varje öppning (key i skärmen), så fälten börjar från varan.
-const EditItemSheet = ({ item, weekStart, isOpen, onClose }: Props) => {
-  const sheetOpen = useSheetOpen(isOpen);
-
+// Arket är monterat hela tiden — se kommentaren om Sheet i skärmen. Formuläret
+// monteras om för varje öppning (formKey), så fälten börjar från varan.
+const EditItemSheet = ({ item, formKey, weekStart, isOpen, onClose }: Props) => {
   return (
     <BottomSheet
-      isOpen={sheetOpen}
+      isOpen={isOpen}
       onOpenChange={(open) => {
         if (!open) onClose();
       }}
@@ -53,15 +54,21 @@ const EditItemSheet = ({ item, weekStart, isOpen, onClose }: Props) => {
         <BottomSheet.Content>
           {/* Eget komponent: useBottomSheetAwareHandlers måste anropas
               inuti BottomSheet.Content — se density-sheet.tsx. */}
-          {item.ingredientId && item.dimension ? (
+          {item === null ? null : item.ingredientId && item.dimension ? (
             <AmountForm
+              key={formKey}
               item={item}
               dimension={item.dimension}
               weekStart={weekStart}
               onDone={onClose}
             />
           ) : (
-            <NameForm item={item} weekStart={weekStart} onDone={onClose} />
+            <NameForm
+              key={formKey}
+              item={item}
+              weekStart={weekStart}
+              onDone={onClose}
+            />
           )}
         </BottomSheet.Content>
       </BottomSheet.Portal>

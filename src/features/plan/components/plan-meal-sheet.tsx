@@ -1,4 +1,3 @@
-import { useSheetOpen } from "@/hooks/use-sheet-open";
 import NumberSelect from "@/components/number-select";
 import { RecipeScope } from "@/features/recipes/recipe-types";
 import {
@@ -30,12 +29,16 @@ import MealConflictAlert, { ConflictChoice } from "./meal-conflict-alert";
 import SlotChips from "./slot-chips";
 import WeekPicker from "./week-picker";
 
+type PlanRecipe = { id: string; scope: RecipeScope; name: string };
+
 type Props = {
-  recipe: { id: string; scope: RecipeScope; name: string };
+  /** null tills ett recept valts. */
+  recipe: PlanRecipe | null;
   isOpen: boolean;
   onClose: () => void;
   // Portionerna ägs av receptsidan: ändras de här syns det där också.
-  servings: number;
+  /** null tills receptets portioner hämtats. */
+  servings: number | null;
   onServingsChange: (servings: number) => void;
 };
 
@@ -47,6 +50,9 @@ const firstSelectableDay = (monday: IsoDate) => {
 const defaultSlot = (slots: MealSlot[]): MealSlot | null =>
   slots.includes("middag") ? "middag" : (slots[0] ?? null);
 
+// Arket måste vara monterat innan det öppnas — se kommentaren om Sheet i
+// veckoplanen. Formuläret monteras om vid varje stängning, så nästa öppning
+// börjar på idag igen.
 const PlanMealSheet = ({
   recipe,
   isOpen,
@@ -54,8 +60,51 @@ const PlanMealSheet = ({
   servings,
   onServingsChange,
 }: Props) => {
-  // Se use-sheet-open: arket monteras ofta redan öppet.
-  const sheetOpen = useSheetOpen(isOpen);
+  const [formKey, setFormKey] = useState(0);
+
+  const close = () => {
+    setFormKey((key) => key + 1);
+    onClose();
+  };
+
+  return (
+    <BottomSheet
+      isOpen={isOpen}
+      // onOpenChange på roten fångar alla stängningar (svep, overlay, kod) —
+      // se density-sheet.tsx.
+      onOpenChange={(open) => {
+        if (!open) close();
+      }}
+    >
+      <BottomSheet.Portal>
+        <BottomSheet.Overlay />
+        <BottomSheet.Content>
+          {recipe && servings !== null && (
+            <PlanMealForm
+              key={formKey}
+              recipe={recipe}
+              servings={servings}
+              onServingsChange={onServingsChange}
+              onDone={close}
+            />
+          )}
+        </BottomSheet.Content>
+      </BottomSheet.Portal>
+    </BottomSheet>
+  );
+};
+
+const PlanMealForm = ({
+  recipe,
+  servings,
+  onServingsChange,
+  onDone,
+}: {
+  recipe: PlanRecipe;
+  servings: number;
+  onServingsChange: (servings: number) => void;
+  onDone: () => void;
+}) => {
   const currentWeek = weekMonday(today());
   const weeks = planWeeks();
   const range = planRange();
@@ -87,19 +136,6 @@ const PlanMealSheet = ({
   const alreadyPlanned = inSlot.some(isSameRecipe);
   const hasConflict = others.length > 0;
 
-  const reset = () => {
-    setWeekStart(currentWeek);
-    setDate(today());
-    setPickedSlot(null);
-    setChoice(null);
-    plan.reset();
-  };
-
-  const close = () => {
-    reset();
-    onClose();
-  };
-
   const submit = () => {
     if (!slot) return;
     plan.mutate(
@@ -111,7 +147,7 @@ const PlanMealSheet = ({
         servings,
         replace: choice === "replace",
       },
-      { onSuccess: close },
+      { onSuccess: onDone },
     );
   };
 
@@ -126,140 +162,126 @@ const PlanMealSheet = ({
   const loadFailed = meals.isError || visibleSlots.isError;
 
   return (
-    <BottomSheet
-      isOpen={sheetOpen}
-      // onOpenChange på roten fångar alla stängningar (svep, overlay, kod) —
-      // se density-sheet.tsx.
-      onOpenChange={(open) => {
-        if (!open) close();
-      }}
-    >
-      <BottomSheet.Portal>
-        <BottomSheet.Overlay />
-        <BottomSheet.Content>
-          <View className="gap-4">
-            <View>
-              <BottomSheet.Title>Lägg i veckoplan</BottomSheet.Title>
-              <BottomSheet.Description>
-                {recipe.name} · {servings} portioner
-              </BottomSheet.Description>
-            </View>
+    <View className="gap-4">
+      <View>
+        <BottomSheet.Title>Lägg i veckoplan</BottomSheet.Title>
+        <BottomSheet.Description>
+          {recipe.name} · {servings} portioner
+        </BottomSheet.Description>
+      </View>
 
-            {isLoading ? (
-              <View className="items-center py-8">
-                <Spinner />
-              </View>
-            ) : loadFailed ? (
-              <View className="items-center gap-3 py-6">
-                <Typography.Paragraph color="muted" align="center">
-                  Kunde inte hämta veckoplanen
-                </Typography.Paragraph>
-                <Button
-                  variant="secondary"
-                  onPress={() => {
-                    meals.refetch();
-                    visibleSlots.refetch();
-                  }}
-                >
-                  <Button.Label>Försök igen</Button.Label>
-                </Button>
-              </View>
-            ) : (
-              <>
-                <WeekPicker
-                  value={weekStart}
-                  onChange={(monday) => {
-                    setWeekStart(monday);
-                    setDate(firstSelectableDay(monday));
-                    setChoice(null);
-                  }}
-                  weeks={weeks}
-                  filledByWeek={grouped.filledByWeek}
-                  capacity={7 * slots.length}
-                  footer={`Du kan planera upp till ${PLAN_WEEKS_AHEAD} veckor framåt.`}
-                />
+      {isLoading ? (
+        <View className="items-center py-8">
+          <Spinner />
+        </View>
+      ) : loadFailed ? (
+        <View className="items-center gap-3 py-6">
+          <Typography.Paragraph color="muted" align="center">
+            Kunde inte hämta veckoplanen
+          </Typography.Paragraph>
+          <Button
+            variant="secondary"
+            onPress={() => {
+              meals.refetch();
+              visibleSlots.refetch();
+            }}
+          >
+            <Button.Label>Försök igen</Button.Label>
+          </Button>
+        </View>
+      ) : (
+        <>
+          <WeekPicker
+            value={weekStart}
+            onChange={(monday) => {
+              setWeekStart(monday);
+              setDate(firstSelectableDay(monday));
+              setChoice(null);
+            }}
+            weeks={weeks}
+            filledByWeek={grouped.filledByWeek}
+            capacity={7 * slots.length}
+            footer={`Du kan planera upp till ${PLAN_WEEKS_AHEAD} veckor framåt.`}
+          />
 
-                <View className="gap-2">
-                  <Typography.Paragraph type="body-sm" weight="semibold">
-                    Vilken dag?{" "}
-                    <Typography.Paragraph type="body-xs" color="muted">
-                      stapeln = redan planerat
-                    </Typography.Paragraph>
-                  </Typography.Paragraph>
-                  <DayPicker
-                    weekStart={weekStart}
-                    value={date}
-                    onChange={(next) => {
-                      setDate(next);
-                      setChoice(null);
-                    }}
-                    slots={slots}
-                    filledByDate={grouped.filledByDate}
-                    highlightSlot={slot}
-                    isDateDisabled={(d) => d < today()}
-                  />
-                </View>
-
-                <View className="gap-2">
-                  <Typography.Paragraph type="body-sm" weight="semibold">
-                    Vilken måltid?
-                  </Typography.Paragraph>
-                  <SlotChips
-                    slots={slots}
-                    value={slot}
-                    onChange={(s) => {
-                      setPickedSlot(s);
-                      setChoice(null);
-                    }}
-                    isTaken={(s) =>
-                      (grouped.byMeal[mealKey(date, s)]?.length ?? 0) > 0
-                    }
-                  />
-                </View>
-
-                {hasConflict && slot && (
-                  <MealConflictAlert
-                    date={date}
-                    slot={slot}
-                    otherNames={others.map((meal) => meal.recipeName)}
-                    choice={choice}
-                    onChoiceChange={setChoice}
-                  />
-                )}
-
-                <View className="flex-row items-center justify-between rounded-2xl bg-surface-secondary p-3">
-                  <View>
-                    <Typography.Paragraph weight="semibold">
-                      Portioner
-                    </Typography.Paragraph>
-                    <Typography.Paragraph type="body-xs" color="muted">
-                      Följer med från receptet
-                    </Typography.Paragraph>
-                  </View>
-                  <NumberSelect value={servings} onChange={onServingsChange} />
-                </View>
-
-                <FieldError isInvalid={!!plan.error}>
-                  {plan.error?.code === "P0001"
-                    ? plan.error.message
-                    : "Kunde inte lägga till i veckoplanen"}
-                </FieldError>
-
-                <Button
-                  size="lg"
-                  isDisabled={isBlocked || !slot || plan.isPending}
-                  onPress={submit}
-                >
-                  <Button.Label>
-                    {plan.isPending ? "Lägger till…" : submitLabel}
-                  </Button.Label>
-                </Button>
-              </>
-            )}
+          <View className="gap-2">
+            <Typography.Paragraph type="body-sm" weight="semibold">
+              Vilken dag?{" "}
+              <Typography.Paragraph type="body-xs" color="muted">
+                stapeln = redan planerat
+              </Typography.Paragraph>
+            </Typography.Paragraph>
+            <DayPicker
+              weekStart={weekStart}
+              value={date}
+              onChange={(next) => {
+                setDate(next);
+                setChoice(null);
+              }}
+              slots={slots}
+              filledByDate={grouped.filledByDate}
+              highlightSlot={slot}
+              isDateDisabled={(d) => d < today()}
+            />
           </View>
-        </BottomSheet.Content>
-      </BottomSheet.Portal>
-    </BottomSheet>
+
+          <View className="gap-2">
+            <Typography.Paragraph type="body-sm" weight="semibold">
+              Vilken måltid?
+            </Typography.Paragraph>
+            <SlotChips
+              slots={slots}
+              value={slot}
+              onChange={(s) => {
+                setPickedSlot(s);
+                setChoice(null);
+              }}
+              isTaken={(s) =>
+                (grouped.byMeal[mealKey(date, s)]?.length ?? 0) > 0
+              }
+            />
+          </View>
+
+          {hasConflict && slot && (
+            <MealConflictAlert
+              date={date}
+              slot={slot}
+              otherNames={others.map((meal) => meal.recipeName)}
+              choice={choice}
+              onChoiceChange={setChoice}
+            />
+          )}
+
+          <View className="flex-row items-center justify-between rounded-2xl bg-surface-secondary p-3">
+            <View>
+              <Typography.Paragraph weight="semibold">
+                Portioner
+              </Typography.Paragraph>
+              <Typography.Paragraph type="body-xs" color="muted">
+                Följer med från receptet
+              </Typography.Paragraph>
+            </View>
+            <NumberSelect value={servings} onChange={onServingsChange} />
+          </View>
+
+          <FieldError isInvalid={!!plan.error}>
+            {plan.error?.code === "P0001"
+              ? plan.error.message
+              : "Kunde inte lägga till i veckoplanen"}
+          </FieldError>
+
+          <Button
+            size="lg"
+            isDisabled={isBlocked || !slot || plan.isPending}
+            onPress={submit}
+          >
+            <Button.Label>
+              {plan.isPending ? "Lägger till…" : submitLabel}
+            </Button.Label>
+          </Button>
+        </>
+      )}
+    </View>
   );
 };
 

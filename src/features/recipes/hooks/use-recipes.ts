@@ -60,10 +60,12 @@ export const useRecipeSearch = (scope: RecipeScope, filters: RecipeFilters) => {
   });
 };
 
-export const useRecipe = (scope: RecipeScope, id: string) =>
+// id kan saknas för ett ark som är monterat innan något recept valts.
+export const useRecipe = (scope: RecipeScope, id: string | undefined) =>
   useQuery({
-    queryKey: recipeKeys.detail(scope, id),
-    queryFn: () => getRecipe(scope, id),
+    queryKey: recipeKeys.detail(scope, id ?? ""),
+    queryFn: () => getRecipe(scope, id!),
+    enabled: !!id,
   });
 
 // Ingen cache mellan två öppningar av formuläret: useForm läser värdena en
