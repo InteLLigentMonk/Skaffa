@@ -17,13 +17,20 @@ const MealCard = ({
   onPress: () => void;
 }) => {
   return (
-    <PressableFeedback onPress={onPress} style={{ width }}>
+    <PressableFeedback
+      onPress={onPress}
+      className="overflow-visible"
+      style={{ width }}
+    >
       <Card className="items-center gap-1">
         {meal.imageUrl ? (
           <StyledImage
             // cacheKey på sökvägen, som receptkortet: en ny signerad URL ska
             // träffa cachen.
-            source={{ uri: meal.imageUrl, cacheKey: meal.imagePath ?? undefined }}
+            source={{
+              uri: meal.imageUrl,
+              cacheKey: meal.imagePath ?? undefined,
+            }}
             className="aspect-square w-full rounded-xl"
             contentFit="cover"
             transition={150}

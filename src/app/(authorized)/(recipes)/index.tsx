@@ -166,7 +166,7 @@ const RecipeIndex = () => {
           keyExtractor={(recipe) => recipe.id}
           numColumns={2}
           columnWrapperClassName="gap-3"
-          contentContainerClassName="grow gap-3 px-4 pb-28"
+          contentContainerClassName="grow gap-3 px-4 pt-2 pb-28"
           renderItem={({ item }) => (
             <RecipeContextMenu
               recipe={item}
