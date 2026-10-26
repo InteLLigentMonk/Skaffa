@@ -20,6 +20,7 @@ const RecipeCard = ({ recipe, width, onPress, onLongPress }: Props) => {
     <PressableFeedback
       onPress={onPress}
       onLongPress={onLongPress}
+      className="overflow-visible"
       style={{ width }}
     >
       <Card className="gap-2 p-2">
@@ -27,8 +28,11 @@ const RecipeCard = ({ recipe, width, onPress, onLongPress }: Props) => {
           <StyledImage
             // cacheKey på sökvägen: en ny signerad URL för samma bild ska
             // träffa cachen, inte ladda ner bilden igen.
-            source={{ uri: recipe.imageUrl, cacheKey: recipe.imagePath ?? undefined }}
-            className="w-full aspect-[4/3] rounded-xl"
+            source={{
+              uri: recipe.imageUrl,
+              cacheKey: recipe.imagePath ?? undefined,
+            }}
+            className="w-full aspect-[4/3] rounded-2xl"
             contentFit="cover"
             transition={150}
           />
