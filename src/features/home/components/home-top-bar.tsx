@@ -61,7 +61,7 @@ export default function HomeTopBar({
 
   return (
     <View
-      className={`flex flex-row px-4 pb-2 items-center justify-between bg-background ${scrolled ? "shadow-md" : ""}`}
+      className={`flex flex-row px-4 pb-2 items-center z-10 justify-between bg-background ${scrolled ? "shadow-md" : ""}`}
     >
       <Typography.Paragraph className="text-foreground">
         {title ?? dateToday()}
