@@ -63,7 +63,7 @@ const HomeMeals = ({ meals }: { meals: PlannedMeal[] }) => {
           snapToInterval={CARD_WIDTH + 16} // kortbredd + gap
           snapToAlignment="start"
           decelerationRate="fast"
-          contentContainerClassName="pb-4 gap-4 px-4"
+          contentContainerClassName="pb-2 pt-1 gap-4 px-4"
         >
           {meals.map((meal) => (
             <MealCard
@@ -83,7 +83,7 @@ const HomeMeals = ({ meals }: { meals: PlannedMeal[] }) => {
             style={{ width: CARD_WIDTH }}
             onPress={openPlan}
           >
-            <Surface className="w-full grow rounded-2xl border-2 border-dashed light:border-green-600 light:bg-green-100 dark:border-green-400 dark:bg-green-950 flex items-center justify-center">
+            <Surface className="w-full grow rounded-xl border-2 border-dashed light:border-green-600 light:bg-green-100 dark:border-green-400 dark:bg-green-950 flex items-center justify-center">
               <StyledIonicons
                 name="add"
                 size={24}

@@ -2,10 +2,7 @@ import { useRouter } from "expo-router";
 import { Menu, MenuTriggerRef } from "heroui-native";
 import { useRef } from "react";
 import { Alert, View } from "react-native";
-import {
-  useCopyPublicRecipe,
-  useToggleFavorite,
-} from "../hooks/use-recipes";
+import { useCopyPublicRecipe, useToggleFavorite } from "../hooks/use-recipes";
 import { RecipeCardData, RecipeScope } from "../recipe-types";
 import RecipeCard from "./recipe-card";
 import MenuRow from "./recipe-menu-row";
@@ -41,7 +38,7 @@ const RecipeContextMenu = ({ recipe, scope, width, onPlan }: Props) => {
   return (
     <Menu>
       <Menu.Trigger asChild ref={trigger}>
-        <View collapsable={false} role="none">
+        <View collapsable={false} role="none" className="grow">
           <RecipeCard
             recipe={recipe}
             width={width}
@@ -77,7 +74,9 @@ const RecipeContextMenu = ({ recipe, scope, width, onPlan }: Props) => {
               />
               <MenuRow
                 icon={recipe.isFavorite ? "heart" : "heart-outline"}
-                title={recipe.isFavorite ? "Ta bort favorit" : "Gör till favorit"}
+                title={
+                  recipe.isFavorite ? "Ta bort favorit" : "Gör till favorit"
+                }
                 onPress={() =>
                   toggleFavorite.mutate(
                     { id: recipe.id, favorite: !recipe.isFavorite },

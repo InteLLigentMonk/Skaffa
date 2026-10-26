@@ -20,10 +20,10 @@ const RecipeCard = ({ recipe, width, onPress, onLongPress }: Props) => {
     <PressableFeedback
       onPress={onPress}
       onLongPress={onLongPress}
-      className="overflow-visible"
+      className="overflow-visible grow"
       style={{ width }}
     >
-      <Card className="gap-2 p-2">
+      <Card className="gap-2 p-2 grow rounded-xl">
         {recipe.imageUrl ? (
           <StyledImage
             // cacheKey på sökvägen: en ny signerad URL för samma bild ska
@@ -32,22 +32,24 @@ const RecipeCard = ({ recipe, width, onPress, onLongPress }: Props) => {
               uri: recipe.imageUrl,
               cacheKey: recipe.imagePath ?? undefined,
             }}
-            className="w-full aspect-[4/3] rounded-2xl"
+            className="w-full aspect-[4/3] rounded-lg"
             contentFit="cover"
             transition={150}
           />
         ) : (
-          <View className="w-full aspect-[4/3] rounded-xl bg-secondary-soft items-center justify-center">
+          <View className="w-full aspect-[4/3] rounded-lg bg-secondary-soft items-center justify-center">
             <Emoji size={40}>
               {recipe.diet ? DIET_EMOJI[recipe.diet] : "🍽️"}
             </Emoji>
           </View>
         )}
-        <Card.Body className="gap-1 px-1 pb-1">
+        <Card.Body className="gap-1 grow">
           <Typography.Heading type="h6" numberOfLines={2}>
             {recipe.name}
           </Typography.Heading>
-          {recipe.prepMinutes !== null && (
+        </Card.Body>
+        {recipe.prepMinutes !== null && (
+          <Card.Footer className="pb-1">
             <View className="flex-row items-center gap-1">
               <StyledIonicons
                 name="time-outline"
@@ -58,8 +60,8 @@ const RecipeCard = ({ recipe, width, onPress, onLongPress }: Props) => {
                 {recipe.prepMinutes} min
               </Typography.Paragraph>
             </View>
-          )}
-        </Card.Body>
+          </Card.Footer>
+        )}
       </Card>
     </PressableFeedback>
   );
