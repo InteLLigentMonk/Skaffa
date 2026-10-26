@@ -36,7 +36,7 @@ const Avatar = ({ initials }: { initials: string }) => {
         className="border-none bg-gradient-to-br from-green-500 to-orange-500"
       >
         {initials ? (
-          <Typography.Heading type="h3" weight="bold" className="text-white">
+          <Typography.Heading type="h5" weight="bold" className="text-white">
             {initials}
           </Typography.Heading>
         ) : (
