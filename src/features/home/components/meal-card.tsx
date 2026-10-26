@@ -22,7 +22,7 @@ const MealCard = ({
       className="overflow-visible"
       style={{ width }}
     >
-      <Card className="items-center gap-1">
+      <Card className="items-center gap-1 p-2 rounded-xl grow">
         {meal.imageUrl ? (
           <StyledImage
             // cacheKey på sökvägen, som receptkortet: en ny signerad URL ska
@@ -31,12 +31,12 @@ const MealCard = ({
               uri: meal.imageUrl,
               cacheKey: meal.imagePath ?? undefined,
             }}
-            className="aspect-square w-full rounded-xl"
+            className="aspect-square w-full rounded-lg"
             contentFit="cover"
             transition={150}
           />
         ) : (
-          <View className="aspect-square w-full items-center justify-center rounded-xl bg-secondary-soft">
+          <View className="aspect-square w-full items-center justify-center rounded-lg bg-secondary-soft">
             <Emoji size={32}>🍽️</Emoji>
           </View>
         )}
