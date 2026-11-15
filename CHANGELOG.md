@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.1](https://github.com/InteLLigentMonk/Skaffa/compare/v1.1.0...v1.1.1) (2026-11-15)
+
+
+### Buggfixar
+
+* **ci:** låt fix-agenten öppna pr ([#27](https://github.com/InteLLigentMonk/Skaffa/issues/27)) ([6bec0ff](https://github.com/InteLLigentMonk/Skaffa/commit/6bec0ffb022755d2bb930875a68f7e82a2760a92))
+* **recipes:** flytta skrollskuggan under filterpillsen ([#28](https://github.com/InteLLigentMonk/Skaffa/issues/28)) ([2e54d22](https://github.com/InteLLigentMonk/Skaffa/commit/2e54d2264e0248beff9870d7e46a4d3717913024))
+
 ## [1.1.0](https://github.com/InteLLigentMonk/Skaffa/compare/v1.0.0...v1.1.0) (2026-11-15)
 
 
