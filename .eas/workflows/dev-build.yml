@@ -1,0 +1,39 @@
+# Bygger development-builden "Skaffa (dev)" när dess native-kod har ändrats.
+#
+# Bygg den här, inte med `eas build` från din dator: fingerprinten räknas då
+# på din Windows-maskin (CRLF, lokal android/-mapp, egna node_modules) och
+# matchar aldrig den som PR-preview räknar på EAS. EAS stoppar då bygget.
+#
+# Manuellt: npx eas-cli workflow:run .eas/workflows/dev-build.yml --ref main
+name: Dev build
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch: {}
+
+jobs:
+  fingerprint:
+    name: Fingerprint (dev)
+    type: fingerprint
+    environment: development
+    env:
+      APP_VARIANT: development
+
+  get_dev_build:
+    name: Finns en dev-build med samma native-kod?
+    needs: [fingerprint]
+    type: get-build
+    params:
+      platform: android
+      profile: development
+      fingerprint_hash: ${{ needs.fingerprint.outputs.android_fingerprint_hash }}
+
+  build_dev:
+    name: Bygg dev-APK
+    needs: [get_dev_build]
+    if: ${{ !needs.get_dev_build.outputs.build_id }}
+    type: build
+    params:
+      platform: android
+      profile: development
