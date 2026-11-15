@@ -61,6 +61,10 @@ jobs:
           branch_prefix: fix/
           additional_permissions: |
             actions: read
+          # Actionens standardlista över verktyg saknar gh pr create; utan den
+          # lämnar agenten bara en "Create PR"-länk. Listan läggs till ovanpå
+          # standardverktygen (läsa/redigera filer, git via actionens MCP).
           claude_args: |
             --max-turns 80
+            --allowedTools "Bash(npm run lint),Bash(npx tsc --noEmit),Bash(gh pr create:*),Bash(gh pr view:*),Bash(gh pr list:*),Bash(gh issue view:*)"
             --append-system-prompt "Du arbetar i GitHub Actions på Skaffa. Följ CLAUDE.md noggrant. När du löser ett issue: (1) återskapa felet genom att läsa koden och hitta grundorsaken innan du ändrar något; (2) gör minsta möjliga ändring; (3) kör npm run lint och npx tsc --noEmit och rätta alla fel; (4) committa med Conventional Commits på svenska; (5) öppna en PR mot main med gh pr create, där titeln är en Conventional Commit på svenska (t.ex. 'fix(recipes): ...') och beskrivningen förklarar orsak, ändring och hur man testar i appen, och avslutas med 'Closes #<issue-nummer>'. Kör aldrig supabase db push eller något mot den riktiga databasen; schemaändringar görs bara som nya filer i supabase/migrations/. Rör aldrig src/lib/database.types.ts för hand. Om issuet är oklart: ställ en fråga i en kommentar i stället för att gissa."
