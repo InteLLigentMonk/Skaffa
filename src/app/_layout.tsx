@@ -1,3 +1,4 @@
+import AnimatedSplash from "@/components/animated-splash";
 import { AuthProvider, useAuth } from "@/features/auth/contexts/auth-context";
 import { PendingInviteProvider } from "@/features/home/contexts/pending-invite-context";
 import { useHome } from "@/features/home/hooks/use-home";
@@ -5,6 +6,7 @@ import { useNavigationTheme } from "@/hooks/use-navigation-theme";
 import {
   Fredoka_500Medium,
   Fredoka_600SemiBold,
+  Fredoka_700Bold,
 } from "@expo-google-fonts/fredoka";
 import {
   Nunito_400Regular,
@@ -22,9 +24,10 @@ import {
   useTheme,
   type ErrorBoundaryProps,
 } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import * as SystemUI from "expo-system-ui";
 import { HeroUINativeProvider } from "heroui-native";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "../global.css";
@@ -34,9 +37,14 @@ const RootNavigator = () => {
   const { isAuthenticated, initializing, isRecoverySession } = useAuth();
   const homeQuery = useHome();
   const theme = useTheme();
+  // Den animerade splashen spelas en gång per kallstart. RootNavigator
+  // monteras inte om när guarden byter gren, så den kommer inte tillbaka
+  // vid in- eller utloggning.
+  const [splashDone, setSplashDone] = useState(false);
   const [fontsLoaded, fontError] = useFonts({
     Fredoka_500Medium,
     Fredoka_600SemiBold,
+    Fredoka_700Bold,
     Nunito_400Regular,
     Nunito_500Medium,
     Nunito_600SemiBold,
@@ -60,47 +68,56 @@ const RootNavigator = () => {
 
   const hasHome = !!homeQuery.data;
 
+  // Den inbyggda splashen är helt grön och döljs när `ready`; AnimatedSplash
+  // ligger då överst med samma gröna bakgrund och ritar upp loggan, medan
+  // rätt gren i Stack monteras under den.
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
-      <Stack.Protected guard={isAuthenticated && !isRecoverySession && hasHome}>
-        <Stack.Screen name="(authorized)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="recipe-form"
-          options={{
-            presentation: "modal",
-            headerShown: false,
-          }}
-        />
-        <Stack.Screen name="recipe/[id]" options={{ headerShown: false }} />
-        <Stack.Screen name="account" options={{ headerShown: false }} />
-      </Stack.Protected>
-      {/* A recovery code takes over the entire app until a new password is
-          set, so the user cannot tab away while the old one is still valid. */}
-      <Stack.Protected guard={isAuthenticated && isRecoverySession}>
-        <Stack.Screen
-          name="reset-password"
-          options={{ title: "Välj nytt lösenord" }}
-        />
-      </Stack.Protected>
-      <Stack.Protected guard={!isAuthenticated}>
-        <Stack.Screen
-          name="(guest)"
-          options={{ title: "Registrera dig", headerShown: false }}
-        />
-      </Stack.Protected>
-      <Stack.Protected
-        guard={isAuthenticated && !isRecoverySession && !hasHome}
+    <>
+      <StatusBar style={splashDone ? "auto" : "light"} />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+        }}
       >
-        <Stack.Screen
-          name="(no-home)"
-          options={{ title: "Skapa hem", headerShown: false }}
-        />
-      </Stack.Protected>
-    </Stack>
+        <Stack.Protected
+          guard={isAuthenticated && !isRecoverySession && hasHome}
+        >
+          <Stack.Screen name="(authorized)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="recipe-form"
+            options={{
+              presentation: "modal",
+              headerShown: false,
+            }}
+          />
+          <Stack.Screen name="recipe/[id]" options={{ headerShown: false }} />
+          <Stack.Screen name="account" options={{ headerShown: false }} />
+        </Stack.Protected>
+        {/* A recovery code takes over the entire app until a new password is
+            set, so the user cannot tab away while the old one is still valid. */}
+        <Stack.Protected guard={isAuthenticated && isRecoverySession}>
+          <Stack.Screen
+            name="reset-password"
+            options={{ title: "Välj nytt lösenord" }}
+          />
+        </Stack.Protected>
+        <Stack.Protected guard={!isAuthenticated}>
+          <Stack.Screen
+            name="(guest)"
+            options={{ title: "Registrera dig", headerShown: false }}
+          />
+        </Stack.Protected>
+        <Stack.Protected
+          guard={isAuthenticated && !isRecoverySession && !hasHome}
+        >
+          <Stack.Screen
+            name="(no-home)"
+            options={{ title: "Skapa hem", headerShown: false }}
+          />
+        </Stack.Protected>
+      </Stack>
+      {!splashDone && <AnimatedSplash onFinish={() => setSplashDone(true)} />}
+    </>
   );
 };
 
