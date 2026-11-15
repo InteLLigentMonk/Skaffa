@@ -43,8 +43,14 @@ import {
   Spinner,
   Typography,
 } from "heroui-native";
-import { useState } from "react";
-import { Alert, RefreshControl, ScrollView, View } from "react-native";
+import { useEffect, useState } from "react";
+import {
+  Alert,
+  RefreshControl,
+  ScrollView,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   useAnimatedStyle,
@@ -52,6 +58,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 
 // Hur långt (px) ett svep ska dras för att byta dag.
 const SWIPE_DISTANCE = 60;
@@ -114,16 +121,35 @@ const PlanScreen = () => {
   // Swipe byter dag inom planeringsintervallet. Gesten sitter bara på dagens
   // innehåll, så väljarna ovanför och vertikal scroll/pull-to-refresh störs inte.
   const translateX = useSharedValue(0);
+  const { width } = useWindowDimensions();
+  // Riktningen på ett pågående byte, så effekten nedan vet från vilken sida
+  // den nya dagen ska glida in. Dagbyten utan svep (tryck) animeras inte.
+  const pendingDirection = useSharedValue<1 | -1 | 0>(0);
   const inRange = (day: IsoDate) => day >= range.from && day <= range.to;
+  const commitSwipe = (direction: 1 | -1) => {
+    pendingDirection.set(direction);
+    setDate(addDays(date, direction));
+  };
+  // Den gamla dagen glider ut helt innan dagen byts; setDate körs först i
+  // animationens callback (UI-tråden, därför scheduleOnRN).
   const swipeTo = (direction: 1 | -1) => {
-    const next = addDays(date, direction);
-    if (!inRange(next)) return false;
-    setDate(next);
-    // Nya dagen glider in från den sida man svepte mot.
-    translateX.set(direction * 80);
-    translateX.set(withTiming(0, { duration: 180 }));
+    if (!inRange(addDays(date, direction))) return false;
+    translateX.set(
+      withTiming(-direction * width, { duration: 150 }, (finished) => {
+        if (finished) scheduleOnRN(commitSwipe, direction);
+      }),
+    );
     return true;
   };
+  // Nya dagens innehåll är renderat när effekten körs. Tills dess ligger det
+  // utanför skärmen på utgångssidan, så inget hinner synas på fel plats.
+  useEffect(() => {
+    const direction = pendingDirection.get();
+    if (direction === 0) return;
+    pendingDirection.set(0);
+    translateX.set(direction * width);
+    translateX.set(withTiming(0, { duration: 150 }));
+  }, [date]); // eslint-disable-line react-hooks/exhaustive-deps
   const swipe = Gesture.Pan()
     .runOnJS(true)
     .activeOffsetX([-20, 20])
