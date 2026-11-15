@@ -87,9 +87,13 @@ const RecipeIndex = () => {
 
   return (
     <View className="flex-1 pt-safe-offset-2">
-      <HomeTopBar title="Recept" scrolled={scrolled} />
+      {/* Sök och filter ligger kvar ovanför listan, så skuggan hör hemma under
+          dem och inte under rubriken. */}
+      <HomeTopBar title="Recept" scrolled={false} />
 
-      <View className="gap-3 pb-3">
+      <View
+        className={`gap-3 pb-3 z-10 bg-background ${scrolled ? "shadow-md" : ""}`}
+      >
         <View className="gap-3 px-4">
           <SearchBar
             onChange={setSearchTerm}
