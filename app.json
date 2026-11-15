@@ -7,6 +7,12 @@
     "icon": "./assets/images/icon.png",
     "scheme": "skaffa",
     "userInterfaceStyle": "light",
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/1914b705-fcca-43f7-9009-1e14880dd6da"
+    },
     "ios": {
       "icon": "./assets/expo.icon"
     },

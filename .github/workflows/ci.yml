@@ -1,0 +1,42 @@
+# Samma kontroller som pre-commit-hooken (.claude/hooks/pre-commit-check.mjs),
+# men på servern så att även agenternas PR:er måste passera dem.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Lint och typkontroll
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      # expo-env.d.ts är gitignorerad och skapas annars av dev-servern. Den
+      # drar in expo/types, som bl.a. deklarerar `import "../global.css"`.
+      # .expo/types (typade routes) saknas också i CI; då faller Href tillbaka
+      # till en lösare typ, så felstavade routes fångas inte här.
+      - name: Skapa expo-env.d.ts
+        run: echo '/// <reference types="expo/types" />' > expo-env.d.ts
+
+      - name: Typkontroll
+        run: npx tsc --noEmit

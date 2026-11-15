@@ -1,0 +1,35 @@
+# Migrationer körs aldrig automatiskt mot Supabase. Den här workflowen
+# flaggar bara PR:er som rör schemat så att du minns att köra `db push`
+# (se supabase/README.md) när PR:en mergas.
+name: DB-migrationer
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+    paths:
+      - "supabase/migrations/**"
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  flag:
+    name: Flagga ny migration
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      PR: ${{ github.event.pull_request.number }}
+    steps:
+      - name: Etikett needs-db-push
+        run: |
+          gh label create needs-db-push --color D93F0B \
+            --description "PR:en innehåller en migration som måste köras manuellt" --force
+          gh pr edit "$PR" --add-label needs-db-push
+
+      - name: Påminnelse (en gång per PR)
+        if: github.event.action == 'opened' || github.event.action == 'reopened'
+        run: |
+          gh pr comment "$PR" --body "🗄️ PR:en innehåller nya migrationer i \`supabase/migrations/\`.
+          De körs **inte** automatiskt. Kör \`db push\` enligt [supabase/README.md](${{ github.server_url }}/${{ github.repository }}/blob/main/supabase/README.md) i samband med merge, och regenerera typerna med \`npm run gen:types\` om schemat ändrats."

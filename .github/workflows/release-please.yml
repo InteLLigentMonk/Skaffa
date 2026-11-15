@@ -1,0 +1,30 @@
+# Håller en öppen "release-PR" som samlar alla feat/fix sedan senaste
+# versionen. När du mergar den bumpas `version` i app.json och package.json,
+# CHANGELOG.md uppdateras och en tag + GitHub Release skapas.
+#
+# fix: → 1.0.x   feat: → 1.x.0   feat!: / BREAKING CHANGE → x.0.0
+#
+# RELEASE_PLEASE_TOKEN (fine-grained PAT med Contents + Pull requests:
+# read/write på det här repot) behövs för att CI ska köras på release-PR:en.
+# Med vanliga GITHUB_TOKEN triggas inga workflows och PR:en går inte att
+# merga under rulesetet på main.
+name: Release Please
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json

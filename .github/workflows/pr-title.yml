@@ -1,0 +1,33 @@
+# PR:er squash-mergas med PR-titeln som commit-meddelande, och release-please
+# läser just de meddelandena för att räkna ut nästa version. Därför måste
+# titeln följa Conventional Commits (se CLAUDE.md).
+name: PR-titel
+
+on:
+  pull_request:
+    types: [opened, reopened, edited, synchronize]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  title:
+    name: Conventional Commit-titel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: amannn/action-semantic-pull-request@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            refactor
+            chore
+            docs
+            style
+            perf
+          # Svenska beskrivningar börjar med gemen: "fix(home): mindre initialer".
+          subjectPattern: ^[a-zåäö0-9].*[^.]$
+          subjectPatternError: |
+            Beskrivningen "{subject}" ska börja med gemen och inte sluta med punkt.
