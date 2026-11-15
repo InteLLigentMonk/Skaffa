@@ -51,6 +51,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # Gitignorerad fil som tsc behöver (se ci.yml).
+      - run: echo '/// <reference types="expo/types" />' > expo-env.d.ts
 
       - uses: anthropics/claude-code-action@v1
         with:

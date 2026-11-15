@@ -31,8 +31,12 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      # .expo/types (typade routes) är gitignorerad och genereras först av
-      # dev-servern. Utan den faller Href tillbaka till en lösare typ, så
-      # kontrollen går igenom men fångar inte felstavade routes.
+      # expo-env.d.ts är gitignorerad och skapas annars av dev-servern. Den
+      # drar in expo/types, som bl.a. deklarerar `import "../global.css"`.
+      # .expo/types (typade routes) saknas också i CI; då faller Href tillbaka
+      # till en lösare typ, så felstavade routes fångas inte här.
+      - name: Skapa expo-env.d.ts
+        run: echo '/// <reference types="expo/types" />' > expo-env.d.ts
+
       - name: Typkontroll
         run: npx tsc --noEmit
