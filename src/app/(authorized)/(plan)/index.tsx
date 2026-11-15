@@ -27,7 +27,13 @@ import {
   sortSlots,
 } from "@/features/plan/plan-types";
 import { useGenerateShoppingList } from "@/features/shopping-list/hooks/use-shopping-list";
-import { IsoDate, today, weekdayLong, weekMonday } from "@/lib/dates";
+import {
+  addDays,
+  IsoDate,
+  today,
+  weekdayLong,
+  weekMonday,
+} from "@/lib/dates";
 import { StyledIonicons } from "@/utils/helpers";
 import { useRouter } from "expo-router";
 import {
@@ -39,6 +45,16 @@ import {
 } from "heroui-native";
 import { useState } from "react";
 import { Alert, RefreshControl, ScrollView, View } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
+
+// Hur långt (px) ett svep ska dras för att byta dag.
+const SWIPE_DISTANCE = 60;
 
 // Vilket ark som är öppet. key ger formuläret i arket en ny montering per
 // öppning, så varje öppning börjar från början även för samma måltid.
@@ -94,6 +110,38 @@ const PlanScreen = () => {
       ...MEAL_SLOTS.filter((slot) => mealsIn(slot).length > 0),
     ]),
   ]);
+
+  // Swipe byter dag inom planeringsintervallet. Gesten sitter bara på dagens
+  // innehåll, så väljarna ovanför och vertikal scroll/pull-to-refresh störs inte.
+  const translateX = useSharedValue(0);
+  const inRange = (day: IsoDate) => day >= range.from && day <= range.to;
+  const swipeTo = (direction: 1 | -1) => {
+    const next = addDays(date, direction);
+    if (!inRange(next)) return false;
+    setDate(next);
+    // Nya dagen glider in från den sida man svepte mot.
+    translateX.set(direction * 80);
+    translateX.set(withTiming(0, { duration: 180 }));
+    return true;
+  };
+  const swipe = Gesture.Pan()
+    .runOnJS(true)
+    .activeOffsetX([-20, 20])
+    .failOffsetY([-15, 15])
+    .onUpdate((e) => {
+      const next = addDays(date, e.translationX < 0 ? 1 : -1);
+      // Längst ut dras innehållet bara lite och fjädrar tillbaka.
+      translateX.set(inRange(next) ? e.translationX : e.translationX * 0.2);
+    })
+    .onEnd((e) => {
+      const direction = e.translationX < 0 ? 1 : -1;
+      if (Math.abs(e.translationX) < SWIPE_DISTANCE || !swipeTo(direction)) {
+        translateX.set(withSpring(0));
+      }
+    });
+  const swipeStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.get() }],
+  }));
 
   const openSheet = (next: Sheet) => {
     setSheet(next);
@@ -198,38 +246,46 @@ const PlanScreen = () => {
             filledByDate={grouped.filledByDate}
           />
 
-          <View className="flex-row items-center gap-2 pt-2">
-            <Typography.Heading type="h4" weight="bold">
-              {capitalize(weekdayLong(date))}
-            </Typography.Heading>
-            {isToday && (
-              <Chip size="sm" variant="soft" color="success">
-                <Chip.Label>Idag</Chip.Label>
-              </Chip>
-            )}
-          </View>
+          <GestureDetector gesture={swipe}>
+            <Animated.View className="gap-4" style={swipeStyle}>
+              <View className="flex-row items-center gap-2 pt-2">
+                <Typography.Heading type="h4" weight="bold">
+                  {capitalize(weekdayLong(date))}
+                </Typography.Heading>
+                {isToday && (
+                  <Chip size="sm" variant="soft" color="success">
+                    <Chip.Label>Idag</Chip.Label>
+                  </Chip>
+                )}
+              </View>
 
-          <FieldError isInvalid={!!deleteMeal.error}>
-            Kunde inte ta bort måltiden
-          </FieldError>
+              <FieldError isInvalid={!!deleteMeal.error}>
+                Kunde inte ta bort måltiden
+              </FieldError>
 
-          {daySlots.map((slot) => (
-            <MealSlotSection
-              key={slot}
-              slot={slot}
-              meals={mealsIn(slot)}
-              isEditable={isEditable}
-              onAdd={() => openSheet({ kind: "add", slot, key: Date.now() })}
-              onOpenRecipe={(meal) =>
-                router.push({
-                  pathname: "/recipe/[id]",
-                  params: { id: meal.recipeId, scope: "home" },
-                })
-              }
-              onAction={onAction}
-              deletingId={deleteMeal.isPending ? deleteMeal.variables : undefined}
-            />
-          ))}
+              {daySlots.map((slot) => (
+                <MealSlotSection
+                  key={slot}
+                  slot={slot}
+                  meals={mealsIn(slot)}
+                  isEditable={isEditable}
+                  onAdd={() =>
+                    openSheet({ kind: "add", slot, key: Date.now() })
+                  }
+                  onOpenRecipe={(meal) =>
+                    router.push({
+                      pathname: "/recipe/[id]",
+                      params: { id: meal.recipeId, scope: "home" },
+                    })
+                  }
+                  onAction={onAction}
+                  deletingId={
+                    deleteMeal.isPending ? deleteMeal.variables : undefined
+                  }
+                />
+              ))}
+            </Animated.View>
+          </GestureDetector>
 
           <View className="gap-2 pt-2">
             <FieldError isInvalid={!!generate.error}>
