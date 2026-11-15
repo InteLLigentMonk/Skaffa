@@ -1,0 +1,26 @@
+# Publicerar varje PR som en egen uppdatering på en egen branch, och lägger
+# en kommentar med QR-kod på PR:en. Den hamnar INTE på kanalen "preview",
+# så ingen får koden förrän du har godkänt och mergat.
+#
+# QR-koden öppnas i development-builden (expo-dev-client). Den fungerar bara
+# om PR:en inte ändrar native-koden; gör den det syns det i fingerprinten och
+# du får testa efter merge när en ny APK byggts.
+name: PR preview
+
+on:
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  publish_preview:
+    name: Publicera PR-uppdatering
+    type: update
+    environment: preview
+    params:
+      platform: android
+      branch: pr-${{ github.event.pull_request.number }}
+
+  comment:
+    name: Kommentera PR:en
+    needs: [publish_preview]
+    type: github-comment

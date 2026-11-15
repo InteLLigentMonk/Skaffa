@@ -1,0 +1,45 @@
+# Körs på Expos servrar vid varje push till main (dvs. efter varje merge).
+#
+# Fingerprinten är en hash av allt native i appen. Finns det redan en
+# preview-build med samma fingerprint räcker det att skicka JS-koden som en
+# OTA-uppdatering till kanalen "preview" (sekunder). Annars har native-koden
+# ändrats och en ny APK byggs (minuter) som måste installeras på telefonerna.
+name: Deploy preview
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  fingerprint:
+    name: Fingerprint
+    type: fingerprint
+    environment: preview
+
+  get_android_build:
+    name: Finns en build med samma native-kod?
+    needs: [fingerprint]
+    type: get-build
+    params:
+      platform: android
+      profile: preview
+      fingerprint_hash: ${{ needs.fingerprint.outputs.android_fingerprint_hash }}
+
+  build_android:
+    name: Bygg ny preview-APK
+    needs: [get_android_build]
+    if: ${{ !needs.get_android_build.outputs.build_id }}
+    type: build
+    params:
+      platform: android
+      profile: preview
+
+  update_android:
+    name: Publicera OTA-uppdatering
+    needs: [get_android_build]
+    if: ${{ needs.get_android_build.outputs.build_id }}
+    type: update
+    environment: preview
+    params:
+      platform: android
+      channel: preview

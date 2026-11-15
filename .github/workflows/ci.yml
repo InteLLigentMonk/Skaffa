@@ -1,0 +1,38 @@
+# Samma kontroller som pre-commit-hooken (.claude/hooks/pre-commit-check.mjs),
+# men på servern så att även agenternas PR:er måste passera dem.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Lint och typkontroll
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      # .expo/types (typade routes) är gitignorerad och genereras först av
+      # dev-servern. Utan den faller Href tillbaka till en lösare typ, så
+      # kontrollen går igenom men fångar inte felstavade routes.
+      - name: Typkontroll
+        run: npx tsc --noEmit

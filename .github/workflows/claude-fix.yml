@@ -1,0 +1,64 @@
+# Fix-agenten. Startar när ett issue får etiketten "agent", eller när någon
+# skriver @claude i ett issue, en PR-kommentar eller en review.
+#
+# Kräver: Claude GitHub App installerad på repot och secret
+# CLAUDE_CODE_OAUTH_TOKEN (från `claude setup-token`). Appen gör att PR:er
+# och pushar från agenten triggar CI, review och PR-preview — det gör inte
+# pushar gjorda med vanliga GITHUB_TOKEN.
+name: Claude fix
+
+on:
+  issues:
+    types: [labeled]
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  pull_request_review:
+    types: [submitted]
+
+concurrency:
+  group: claude-fix-${{ github.event.issue.number || github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  claude:
+    # Bara du (och andra med skrivrätt) kan starta agenten.
+    if: |
+      (github.event_name == 'issues' && github.event.label.name == 'agent') ||
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude') &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude') &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)) ||
+      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude') &&
+        contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.review.author_association))
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      # Agenten ska kunna köra samma kontroller som pre-commit-hooken.
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          label_trigger: agent
+          branch_prefix: fix/
+          additional_permissions: |
+            actions: read
+          claude_args: |
+            --max-turns 80
+            --append-system-prompt "Du arbetar i GitHub Actions på Skaffa. Följ CLAUDE.md noggrant. När du löser ett issue: (1) återskapa felet genom att läsa koden och hitta grundorsaken innan du ändrar något; (2) gör minsta möjliga ändring; (3) kör npm run lint och npx tsc --noEmit och rätta alla fel; (4) committa med Conventional Commits på svenska; (5) öppna en PR mot main med gh pr create, där titeln är en Conventional Commit på svenska (t.ex. 'fix(recipes): ...') och beskrivningen förklarar orsak, ändring och hur man testar i appen, och avslutas med 'Closes #<issue-nummer>'. Kör aldrig supabase db push eller något mot den riktiga databasen; schemaändringar görs bara som nya filer i supabase/migrations/. Rör aldrig src/lib/database.types.ts för hand. Om issuet är oklart: ställ en fråga i en kommentar i stället för att gissa."

@@ -1,0 +1,46 @@
+name: Bugg
+description: Något i appen fungerar inte som det ska
+title: "[Bugg] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ju tydligare beskrivning, desto bättre kan agenten laga felet.
+        Lägg till etiketten **agent** när issuet är redo att lämnas över.
+  - type: input
+    id: screen
+    attributes:
+      label: Var i appen?
+      placeholder: t.ex. Recept → Redigera recept
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steg för att återskapa
+      placeholder: |
+        1. Öppna ...
+        2. Tryck på ...
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Förväntat
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Vad hände i stället
+      description: Lägg gärna till en skärmdump.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Appversion
+      description: Står under Inställningar → Appar → Skaffa på telefonen.
+      placeholder: t.ex. 1.0.1

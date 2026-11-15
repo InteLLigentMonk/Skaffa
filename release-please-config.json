@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "packages": {
+    ".": {
+      "release-type": "expo",
+      "package-name": "skaffa",
+      "include-component-in-tag": false,
+      "pull-request-title-pattern": "chore: release ${version}",
+      "changelog-sections": [
+        { "type": "feat", "section": "Nytt" },
+        { "type": "fix", "section": "Buggfixar" },
+        { "type": "perf", "section": "Prestanda" },
+        { "type": "style", "section": "Utseende" },
+        { "type": "refactor", "section": "Omstrukturering", "hidden": true },
+        { "type": "docs", "section": "Dokumentation", "hidden": true },
+        { "type": "chore", "section": "Underhåll", "hidden": true }
+      ]
+    }
+  }
+}
