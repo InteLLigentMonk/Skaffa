@@ -31,6 +31,11 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           track_progress: true
+          # Fix-agentens PR:er öppnas av Claude-appen, och actionen vägrar annars
+          # att starta för botar. Bara den boten släpps in — inte '*'.
+          # restrict_untrusted_prs lämnas på: reviewn kör ingen kod från PR:en,
+          # bara gh-kommandon som läser och kommenterar.
+          allowed_bots: "claude,claude[bot]"
           prompt: |
             REPO: ${{ github.repository }}
             PR NUMBER: ${{ github.event.pull_request.number }}
