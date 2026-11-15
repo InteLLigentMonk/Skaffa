@@ -27,7 +27,13 @@ import {
   sortSlots,
 } from "@/features/plan/plan-types";
 import { useGenerateShoppingList } from "@/features/shopping-list/hooks/use-shopping-list";
-import { IsoDate, today, weekdayLong, weekMonday } from "@/lib/dates";
+import {
+  addDays,
+  IsoDate,
+  today,
+  weekdayLong,
+  weekMonday,
+} from "@/lib/dates";
 import { StyledIonicons } from "@/utils/helpers";
 import { useRouter } from "expo-router";
 import {
@@ -37,8 +43,29 @@ import {
   Spinner,
   Typography,
 } from "heroui-native";
-import { useState } from "react";
-import { Alert, RefreshControl, ScrollView, View } from "react-native";
+import { useEffect, useState } from "react";
+import {
+  Alert,
+  RefreshControl,
+  ScrollView,
+  View,
+} from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+} from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
+
+// Hur långt (px) ett svep ska dras för att byta dag.
+const SWIPE_DISTANCE = 60;
+// Shared axis X: hur långt (px) dagen glider, och hur länge ut/in tar (ms).
+const SLIDE_DISTANCE = 40;
+const OUT_DURATION = 120;
+const IN_DURATION = 180;
 
 // Vilket ark som är öppet. key ger formuläret i arket en ny montering per
 // öppning, så varje öppning börjar från början även för samma måltid.
@@ -94,6 +121,78 @@ const PlanScreen = () => {
       ...MEAL_SLOTS.filter((slot) => mealsIn(slot).length > 0),
     ]),
   ]);
+
+  // Swipe byter dag inom planeringsintervallet. Gesten sitter bara på dagens
+  // innehåll, så väljarna ovanför och vertikal scroll/pull-to-refresh störs inte.
+  // Dagbytet är en "shared axis X"-övergång: gamla dagen glider en bit och tonar
+  // ut, den nya glider in från motsatt sida och tonar in.
+  const translateX = useSharedValue(0);
+  const opacity = useSharedValue(1);
+  // Riktningen på ett pågående byte, så effekten nedan vet från vilken sida
+  // den nya dagen ska glida in.
+  const pendingDirection = useSharedValue<1 | -1 | 0>(0);
+  const inRange = (day: IsoDate) => day >= range.from && day <= range.to;
+  const commitSwipe = (direction: 1 | -1) => {
+    pendingDirection.set(direction);
+    setDate(addDays(date, direction));
+  };
+  // Gamla dagen fortsätter från där fingret är och tonar ut; setDate körs först
+  // i animationens callback (UI-tråden, därför scheduleOnRN).
+  const swipeTo = (direction: 1 | -1) => {
+    if (!inRange(addDays(date, direction))) return false;
+    opacity.set(withTiming(0, { duration: OUT_DURATION }));
+    translateX.set(
+      withTiming(
+        translateX.get() - direction * SLIDE_DISTANCE,
+        { duration: OUT_DURATION },
+        (finished) => {
+          if (finished) scheduleOnRN(commitSwipe, direction);
+        },
+      ),
+    );
+    return true;
+  };
+  // Tryck i dag- eller veckoväljaren: samma in-animation som efter ett svep.
+  const selectDate = (next: IsoDate) => {
+    if (next === date) return;
+    pendingDirection.set(next > date ? 1 : -1);
+    setDate(next);
+  };
+  // Nya dagens innehåll är renderat när effekten körs. Tills dess ligger det
+  // kvar osynligt efter ett svep (opacity 0), så inget blinkar.
+  useEffect(() => {
+    const direction = pendingDirection.get();
+    if (direction === 0) return;
+    pendingDirection.set(0);
+    translateX.set(direction * SLIDE_DISTANCE);
+    opacity.set(0);
+    const config = { duration: IN_DURATION, easing: Easing.out(Easing.cubic) };
+    translateX.set(withTiming(0, config));
+    opacity.set(withTiming(1, config));
+  }, [date]); // eslint-disable-line react-hooks/exhaustive-deps
+  const swipe = Gesture.Pan()
+    .runOnJS(true)
+    .activeOffsetX([-20, 20])
+    .failOffsetY([-15, 15])
+    .onUpdate((e) => {
+      const next = addDays(date, e.translationX < 0 ? 1 : -1);
+      // Längst ut dras innehållet bara lite och fjädrar tillbaka.
+      const x = inRange(next) ? e.translationX : e.translationX * 0.2;
+      translateX.set(x);
+      // Tonar från 1 till 0.6 vid tröskeln.
+      opacity.set(1 - 0.4 * Math.min(Math.abs(x) / SWIPE_DISTANCE, 1));
+    })
+    .onEnd((e) => {
+      const direction = e.translationX < 0 ? 1 : -1;
+      if (Math.abs(e.translationX) < SWIPE_DISTANCE || !swipeTo(direction)) {
+        translateX.set(withSpring(0));
+        opacity.set(withTiming(1, { duration: IN_DURATION }));
+      }
+    });
+  const swipeStyle = useAnimatedStyle(() => ({
+    opacity: opacity.get(),
+    transform: [{ translateX: translateX.get() }],
+  }));
 
   const openSheet = (next: Sheet) => {
     setSheet(next);
@@ -183,7 +282,7 @@ const PlanScreen = () => {
         >
           <WeekPicker
             value={weekStart}
-            onChange={(monday) => setDate(sameWeekdayIn(monday, date))}
+            onChange={(monday) => selectDate(sameWeekdayIn(monday, date))}
             weeks={weeks}
             filledByWeek={grouped.filledByWeek}
             capacity={7 * slots.length}
@@ -193,43 +292,51 @@ const PlanScreen = () => {
           <DayPicker
             weekStart={weekStart}
             value={date}
-            onChange={setDate}
+            onChange={selectDate}
             slots={slots}
             filledByDate={grouped.filledByDate}
           />
 
-          <View className="flex-row items-center gap-2 pt-2">
-            <Typography.Heading type="h4" weight="bold">
-              {capitalize(weekdayLong(date))}
-            </Typography.Heading>
-            {isToday && (
-              <Chip size="sm" variant="soft" color="success">
-                <Chip.Label>Idag</Chip.Label>
-              </Chip>
-            )}
-          </View>
+          <GestureDetector gesture={swipe}>
+            <Animated.View className="gap-4" style={swipeStyle}>
+              <View className="flex-row items-center gap-2 pt-2">
+                <Typography.Heading type="h4" weight="bold">
+                  {capitalize(weekdayLong(date))}
+                </Typography.Heading>
+                {isToday && (
+                  <Chip size="sm" variant="soft" color="success">
+                    <Chip.Label>Idag</Chip.Label>
+                  </Chip>
+                )}
+              </View>
 
-          <FieldError isInvalid={!!deleteMeal.error}>
-            Kunde inte ta bort måltiden
-          </FieldError>
+              <FieldError isInvalid={!!deleteMeal.error}>
+                Kunde inte ta bort måltiden
+              </FieldError>
 
-          {daySlots.map((slot) => (
-            <MealSlotSection
-              key={slot}
-              slot={slot}
-              meals={mealsIn(slot)}
-              isEditable={isEditable}
-              onAdd={() => openSheet({ kind: "add", slot, key: Date.now() })}
-              onOpenRecipe={(meal) =>
-                router.push({
-                  pathname: "/recipe/[id]",
-                  params: { id: meal.recipeId, scope: "home" },
-                })
-              }
-              onAction={onAction}
-              deletingId={deleteMeal.isPending ? deleteMeal.variables : undefined}
-            />
-          ))}
+              {daySlots.map((slot) => (
+                <MealSlotSection
+                  key={slot}
+                  slot={slot}
+                  meals={mealsIn(slot)}
+                  isEditable={isEditable}
+                  onAdd={() =>
+                    openSheet({ kind: "add", slot, key: Date.now() })
+                  }
+                  onOpenRecipe={(meal) =>
+                    router.push({
+                      pathname: "/recipe/[id]",
+                      params: { id: meal.recipeId, scope: "home" },
+                    })
+                  }
+                  onAction={onAction}
+                  deletingId={
+                    deleteMeal.isPending ? deleteMeal.variables : undefined
+                  }
+                />
+              ))}
+            </Animated.View>
+          </GestureDetector>
 
           <View className="gap-2 pt-2">
             <FieldError isInvalid={!!generate.error}>
