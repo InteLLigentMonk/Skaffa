@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.2.0](https://github.com/InteLLigentMonk/Skaffa/compare/v1.1.1...v1.2.0) (2026-11-15)
+
+
+### Nytt
+
+* **app:** ny ikon och animerad splash ([#31](https://github.com/InteLLigentMonk/Skaffa/issues/31)) ([e6ad3f9](https://github.com/InteLLigentMonk/Skaffa/commit/e6ad3f91a75894972e9aef0a298faffb7e31b6b9))
+
+
+### Buggfixar
+
+* **ci:** låt review-agenten granska fix-agentens pr ([#36](https://github.com/InteLLigentMonk/Skaffa/issues/36)) ([bd0b4c2](https://github.com/InteLLigentMonk/Skaffa/commit/bd0b4c2b58d77f52a3858ef73cb2acf8158bfd33))
+* **ci:** stäng av auto-läge för fix-agenten ([#34](https://github.com/InteLLigentMonk/Skaffa/issues/34)) ([42f556c](https://github.com/InteLLigentMonk/Skaffa/commit/42f556cae82ddbc45bffd3b78ad86affaaa4d8e9))
+
 ## [1.1.1](https://github.com/InteLLigentMonk/Skaffa/compare/v1.1.0...v1.1.1) (2026-11-15)
 
 
